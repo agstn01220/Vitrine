@@ -18,8 +18,8 @@
 <meta name="apple-mobile-web-app-title" content="La Vitrine">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <style>
 /* Layout: vitrine de vestiaire éclairée par projecteurs, onglets en bas façon tableau d'affichage, mobile d'abord */
 :root{
@@ -269,9 +269,6 @@ nav.tabs button[aria-selected="true"]::after{content:"";display:block;height:2px
 .back-link{background:none;border:none;color:var(--gold);font:700 14px var(--f-num);letter-spacing:.1em;text-transform:uppercase;padding:6px 0;margin-bottom:8px}
 .sync-state{display:block;margin-top:4px;font:600 11px var(--f-num);letter-spacing:.06em;text-transform:none;color:var(--muted)}
 .sync-state.ok{color:#4fbf8b}.sync-state.err{color:var(--red)}.sync-state.run{color:var(--gold)}
-.gh-form{display:grid;gap:10px;width:100%;max-width:420px}
-.gh-form label{display:flex;flex-direction:column;gap:4px;font:600 13px var(--f-body)}
-.gh-form input{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 12px;font:15px var(--f-body);color:var(--fg)}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -325,20 +322,6 @@ nav.tabs button[aria-selected="true"]::after{content:"";display:block;height:2px
       <div class="panel">
         <h3>Passer du Mac à l'iPhone</h3>
         <p>Exporte le .zip sur un appareil et enregistre-le dans iCloud Drive. Sur l'autre appareil, appuie sur « Choisir un fichier .zip » et sélectionne-le dans iCloud Drive.</p>
-      </div>
-            <div class="panel" id="gh-panel" hidden>
-        <h3>Synchronisation GitHub</h3>
-        <p>Ta collection est enregistrée dans ton dépôt GitHub privé, et ton iPhone et ton Mac restent à jour automatiquement.</p>
-        <div id="gh-form" class="gh-form">
-          <label>Compte GitHub<input id="gh-owner" value="agstn01220" autocomplete="off" autocapitalize="off"></label>
-          <label>Dépôt privé<input id="gh-repo" value="la-vitrine-data" autocomplete="off" autocapitalize="off"></label>
-          <label>Jeton d'accès<input id="gh-token" type="password" placeholder="github_pat_…" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
-          <button id="gh-connect" class="btn gold">Connecter</button>
-        </div>
-        <div id="gh-on" hidden>
-          <p>Connecté à <b id="gh-repo-name"></b>. <span id="gh-status"></span></p>
-          <div class="ov-actions" style="justify-content:flex-start"><button id="gh-now" class="btn small gold">Synchroniser maintenant</button><button id="gh-off" class="btn small danger">Déconnecter cet appareil</button></div>
-        </div>
       </div>
       <div class="panel" id="ex-panel" hidden>
         <h3>Exemples</h3>
@@ -520,7 +503,7 @@ const cardHTML=(it,i)=>`<div class="card" role="button" tabindex="0" data-i="${i
     <div class="hanger"><div class="tl">${it.example?'<span class="tag ex">Exemple</span>':(it.type?`<span class="tag">${esc(it.type)}</span>`:'')}${(()=>{ const b=[it.signe&&'Signé',(it.version==='Porté'||it.version==='Préparé')&&it.version].filter(Boolean); return b.length?`<div class="badges">${b.map(x=>`<span>${x}</span>`).join('')}</div>`:''; })()}</div>
       ${it.front?`<img src="${url(it,'front')}" alt="${esc(it.club)}" loading="lazy">`:'<span class="hint">Pas de photo</span>'}
 </div>
-    <button class="fav${it.fav?' on':''}" data-fav="${it.id}" aria-label="Favori">★</button>
+    <button class="fav${it.fav?' on':''}" data-fav="${esc(it.id)}" aria-label="Favori">★</button>
     <div class="meta"><span class="club">${esc(it.club)}</span>${it.version?`<span class="sub">${esc(it.version)}</span>`:''}<span class="sub"><span>${esc(it.saison||'—')}</span>${it.joueur?`<span>· ${esc(it.joueur)}</span>`:''}</span>${it.serie?`<span class="serial">N° ${esc(it.serie)}</span>`:''}</div></div>`;
 function render(){
   $('#cnt').textContent=items.length;
@@ -562,8 +545,7 @@ function renderStats(){ renderClubs();
       <div class="panel"><h3>Par version</h3>${bars(by(i=>i.version),n)}</div>
     </div>`;
 }
-function renderReminder(){ if(GH.cfg){ $('#reminder').hidden=true; $('#last-backup').textContent='La synchro GitHub est active : ta collection est sauvegardée automatiquement.'; return; }
-  const last=+LS.get('vx_lastBackup')||0, real=items.filter(i=>!i.example).length, b=$('#reminder');
+function renderReminder(){  const last=+LS.get('vx_lastBackup')||0, real=items.filter(i=>!i.example).length, b=$('#reminder');
   const days = last? Math.floor((Date.now()-last)/864e5) : null;
   $('#last-backup').textContent = last ? `Dernière sauvegarde : ${new Date(last).toLocaleDateString('fr-FR')} (il y a ${days} j).` : 'Aucune sauvegarde pour l’instant.';
   if(real>0 && (days===null || days>=7)){
@@ -984,98 +966,6 @@ $('#imp').addEventListener('change',async e=>{
 });
 $('#btn-clear-ex').onclick=async()=>{ for(const i of items.filter(i=>i.example)) await DB.del(i.id); items=items.filter(i=>!i.example); render(); toast('Exemples supprimés'); };
 
-/* ---------- synchro GitHub (dépôt privé) ---------- */
-const GH={
-  get cfg(){ return null; },
-  set cfg(v){ LS.set('vx_gh', v?JSON.stringify(v):''); },
-  busy:false, again:false, timer:null, branch:null
-};
-const tombs=()=>{ try{ return JSON.parse(LS.get('vx_tombs')||'{}'); }catch(e){ return {}; } };
-function syncStatus(t, cls){ const el=$('#sync-state'); if(el){ el.textContent=t; el.className='sync-state '+(cls||''); } const s=$('#gh-status'); if(s) s.textContent=t; }
-async function gh(path, opt={}){
-  const c=GH.cfg, headers={Authorization:`Bearer ${c.token}`,'X-GitHub-Api-Version':'2022-11-28',Accept:opt.raw?'application/vnd.github.raw':'application/vnd.github+json'};
-  if(opt.body) headers['Content-Type']='application/json';
-  const r=await fetch(`https://api.github.com/repos/${encodeURIComponent(c.owner)}/${encodeURIComponent(c.repo)}${path}`,{method:opt.method||'GET',headers,body:opt.body,cache:'no-store'});
-  if(!r.ok){ const e=new Error('GitHub '+r.status); e.status=r.status; throw e; }
-  if(opt.raw==='blob') return r.blob(); if(opt.raw) return r.text();
-  return r.status===204?null:r.json();
-}
-const bytesB64=bytes=>{ let s=''; for(let i=0;i<bytes.length;i+=0x8000) s+=String.fromCharCode(...bytes.subarray(i,i+0x8000)); return btoa(s); };
-const blobB64=async b=>bytesB64(new Uint8Array(await b.arrayBuffer()));
-const textB64=t=>bytesB64(new TextEncoder().encode(t));
-const putFile=(path,content,sha,msg)=>gh('/contents/'+path.split('/').map(encodeURIComponent).join('/'),{method:'PUT',body:JSON.stringify({message:msg,content,branch:GH.branch,...(sha?{sha}:{})})});
-const SKIP=new Set(['front','more','back','_ph','example']);
-const toRemote=it=>{ const o={}; for(const k in it) if(!SKIP.has(k)) o[k]=it[k]; o.photos=it._ph||[]; return o; };
-function scheduleSync(ms=3000){ if(!GH.cfg) return; clearTimeout(GH.timer); GH.timer=setTimeout(syncNow,ms); }
-async function syncNow(){
-  if(!GH.cfg) return;
-  if(GH.busy){ GH.again=true; return; }
-  GH.busy=true; syncStatus('Synchro…','run');
-  try{
-    for(let attempt=0;attempt<3;attempt++){
-      try{ await syncOnce(); break; }
-      catch(e){ if((e.status===409||e.status===422)&&attempt<2) continue; throw e; }
-    }
-    LS.set('vx_lastSync',Date.now());
-    syncStatus('Synchronisé à '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),'ok');
-  }catch(e){
-    syncStatus(e.status===401||e.status===403?'Jeton refusé : vérifie-le':e.status===404?'Dépôt introuvable : vérifie le nom':!navigator.onLine?'Hors ligne : synchro au retour du réseau':'Synchro impossible ('+(e.status||'réseau')+')','err');
-  }
-  GH.busy=false; if(GH.again){ GH.again=false; scheduleSync(500); }
-}
-async function syncOnce(){
-  if(!GH.branch) GH.branch=(await gh('')).default_branch||'main';
-  let files=new Map();
-  try{ const t=await gh(`/git/trees/${encodeURIComponent(GH.branch)}?recursive=1`); t.tree.forEach(x=>{ if(x.type==='blob') files.set(x.path,x.sha); }); }
-  catch(e){ if(e.status!==409&&e.status!==404) throw e; }
-  let remote={items:[],tombs:{}};
-  if(files.has('collection.json')) remote=JSON.parse(await gh('/contents/collection.json',{raw:true}));
-  const T={...remote.tombs}; for(const [id,t] of Object.entries(tombs())) T[id]=Math.max(T[id]||0,t);
-  const L=new Map(items.filter(i=>!i.example).map(i=>[i.id,i])), R=new Map((remote.items||[]).map(i=>[i.id,i]));
-  const out=[]; let localChanged=false;
-  for(const id of new Set([...L.keys(),...R.keys()])){
-    const l=L.get(id), r=R.get(id), lt=l?.updatedAt||l?.createdAt||0, rt=r?.updatedAt||0, tt=T[id]||0;
-    if(tt && tt>=Math.max(lt,rt)){ if(l){ await DB.del(id,true); localChanged=true; } continue; }
-    if(r && (!l || rt>lt)){
-      const blobs=[]; for(const n of r.photos||[]){ try{ blobs.push(await gh('/contents/'+n.split('/').map(encodeURIComponent).join('/'),{raw:'blob'})); }catch(e){} }
-      const o={...r}; delete o.photos; o.front=blobs[0]||null; o.more=blobs.slice(1); o._ph=r.photos||[];
-      await DB.put(o,true); localChanged=true; out.push(toRemote(o)); continue;
-    }
-    if(l){
-      const ph=[l.front,...(l.more||[])].filter(Boolean);
-      let names=l._ph && l._ph.length===ph.length && l._ph.every(n=>files.has(n)) ? l._ph : null;
-      if(!names){
-        names=[]; const stamp=l.updatedAt||l.createdAt||Date.now();
-        for(let i=0;i<ph.length;i++){ const n=`photos/${l.id}-${stamp}-${i}.${ext(ph[i])}`; if(!files.has(n)){ syncStatus(`Envoi des photos… (${l.club})`,'run'); await putFile(n,await blobB64(ph[i]),null,`Photo ${l.club} ${l.saison||''}`); files.set(n,'x'); } names.push(n); }
-        l._ph=names; await DB.put(l,true);
-      }
-      out.push(toRemote(l));
-    }
-  }
-  const body=JSON.stringify({app:'la-vitrine',version:2,items:out.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)),tombs:T},null,1);
-  const before=JSON.stringify({app:'la-vitrine',version:2,items:(remote.items||[]).slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)),tombs:remote.tombs||{}},null,1);
-  if(body!==before) await putFile('collection.json',textB64(body),files.get('collection.json'),`Collection : ${out.length} maillots`);
-  LS.set('vx_tombs',JSON.stringify(T));
-  if(localChanged){ items=await DB.all(); render(); }
-}
-function renderGhPanel(){
-  const c=GH.cfg, p=$('#gh-panel'); if(!p) return;
-  p.querySelector('#gh-form').hidden=!!c; p.querySelector('#gh-on').hidden=!c;
-  if(c) $('#gh-repo-name').textContent=`${c.owner}/${c.repo}`;
-}
-$('#gh-connect')?.addEventListener('click',async()=>{
-  const owner=$('#gh-owner').value.trim(), repo=$('#gh-repo').value.trim(), token=$('#gh-token').value.trim();
-  if(!owner||!repo||!token) return toast('Remplis les trois champs');
-  GH.cfg={owner,repo,token}; GH.branch=null; $('#gh-token').value='';
-  try{ await gh(''); renderGhPanel(); toast('Connecté à GitHub'); syncNow(); }
-  catch(e){ GH.cfg=null; renderGhPanel(); toast(e.status===401?'Jeton refusé':e.status===404?'Dépôt introuvable ou jeton sans accès':'Connexion impossible ici'); }
-});
-$('#gh-now')?.addEventListener('click',syncNow);
-$('#gh-off')?.addEventListener('click',()=>{ GH.cfg=null; renderGhPanel(); syncStatus('Synchro désactivée',''); toast('Jeton supprimé de cet appareil'); });
-document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') scheduleSync(300); });
-window.addEventListener('online',()=>scheduleSync(300));
-
-window.__sync=()=>scheduleSync();
 /* ---------- démarrage ---------- */
 (async()=>{
   idb = await openDB();
@@ -1085,7 +975,7 @@ window.__sync=()=>scheduleSync();
     await seed(); items = await DB.all();
   }
   try{ localStorage.removeItem('vx_gh'); }catch(e){}
-  render(); renderGhPanel();
+  render();
   const t=LS.get('vx_tab'); if(t&&t!=='gallery') document.querySelector(`nav.tabs [data-v="${t}"]`)?.click();
 })();
 })();
