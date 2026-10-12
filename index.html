@@ -971,7 +971,7 @@ $('#imp').addEventListener('change',async e=>{
 $('#btn-clear-ex').onclick=async()=>{ for(const i of items.filter(i=>i.example)) await DB.del(i.id); items=items.filter(i=>!i.example); render(); toast('Exemples supprimés'); };
 
 /* ---------- synchro Google (Firebase : Auth + Firestore) ---------- */
-const FB_CONFIG = null;
+const FB_CONFIG = {apiKey:"AIzaSyDA4bcwECsq3NM_s_2I28BCCUW8TQvFNRQ",authDomain:"la-vitrine-834ea.firebaseapp.com",projectId:"la-vitrine-834ea",storageBucket:"la-vitrine-834ea.firebasestorage.app",messagingSenderId:"790022874195",appId:"1:790022874195:web:ff9d93efcf7ef4eacc12a6"};
 const FB_V = '10.14.1';
 let fb = null, fUser = null, syncing = false, again = false, unsub = null;
 const sStat = m => { const e=$('#sync-status'); if(e) e.textContent=m; };
