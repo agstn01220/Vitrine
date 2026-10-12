@@ -303,6 +303,14 @@ nav.tabs button[aria-selected="true"]::after{content:"";display:block;height:2px
   <section id="v-save" hidden>
     <div class="save">
       <div class="panel">
+        <h3>Synchronisation Mac et iPhone</h3>
+        <p>Connecte-toi avec le même compte Google sur chaque appareil : chaque maillot ajouté, modifié ou supprimé apparaît automatiquement sur les autres, photos comprises.</p>
+        <p class="note" id="sync-status"></p>
+        <button id="sync-in" class="btn gold">Se connecter avec Google</button>
+        <button id="sync-now" class="btn gold" hidden>Synchroniser maintenant</button>
+        <button id="sync-out" class="btn" hidden style="margin-top:8px">Se déconnecter</button>
+      </div>
+      <div class="panel">
         <h3>Exporter</h3>
         <p>Un fichier .zip avec toutes les fiches et toutes les photos. Garde-le sur un cloud (Google Drive, iCloud…).</p>
         <button id="btn-export" class="btn gold">Télécharger la sauvegarde</button>
@@ -318,10 +326,6 @@ nav.tabs button[aria-selected="true"]::after{content:"";display:block;height:2px
         <p>Choisis un .zip exporté depuis cette app. Les maillots sont ajoutés ou mis à jour, rien n'est supprimé.</p>
         <label class="btn" for="imp">Choisir un fichier .zip</label>
         <input id="imp" type="file" accept=".zip,application/zip" hidden>
-      </div>
-      <div class="panel">
-        <h3>Passer du Mac à l'iPhone</h3>
-        <p>Exporte le .zip sur un appareil et enregistre-le dans iCloud Drive. Sur l'autre appareil, appuie sur « Choisir un fichier .zip » et sélectionne-le dans iCloud Drive.</p>
       </div>
       <div class="panel" id="ex-panel" hidden>
         <h3>Exemples</h3>
@@ -965,6 +969,81 @@ $('#imp').addEventListener('change',async e=>{
   }catch(err){ toast('Fichier non reconnu : choisis un .zip exporté depuis cette app'); }
 });
 $('#btn-clear-ex').onclick=async()=>{ for(const i of items.filter(i=>i.example)) await DB.del(i.id); items=items.filter(i=>!i.example); render(); toast('Exemples supprimés'); };
+
+/* ---------- synchro Google (Firebase : Auth + Firestore) ---------- */
+const FB_CONFIG = null;
+const FB_V = '10.14.1';
+let fb = null, fUser = null, syncing = false, again = false, unsub = null;
+const sStat = m => { const e=$('#sync-status'); if(e) e.textContent=m; };
+function loadJS(src){ return new Promise((ok,ko)=>{ const s=document.createElement('script'); s.src=src; s.onload=ok; s.onerror=ko; document.head.appendChild(s); }); }
+async function fbInit(){
+  if(!FB_CONFIG) return null; if(fb) return fb;
+  for(const m of ['app','auth','firestore']) await loadJS(`https://www.gstatic.com/firebasejs/${FB_V}/firebase-${m}-compat.js`);
+  firebase.initializeApp(FB_CONFIG);
+  const db=firebase.firestore(); db.settings({ignoreUndefinedProperties:true, merge:true});
+  fb={auth:firebase.auth(), db};
+  fb.auth.onAuthStateChanged(u=>{ fUser=u; drawSync(); if(unsub){unsub();unsub=null;} if(u){ unsub=col('maillots').onSnapshot(s=>{ if(!s.metadata.hasPendingWrites) window.__sync(); }, ()=>{}); } });
+  return fb;
+}
+const col = n => fb.db.collection('users').doc(fUser.uid).collection(n);
+function drawSync(){
+  const on=!!fUser; $('#sync-in').hidden=on; $('#sync-out').hidden=!on; $('#sync-now').hidden=!on;
+  if(!FB_CONFIG){ $('#sync-in').hidden=true; sStat('Bientôt disponible.'); return; }
+  sStat(on ? `Connecté : ${fUser.email}` : 'Non connecté. Connecte-toi avec le même compte Google sur le Mac et l\'iPhone.');
+}
+const b64 = b => new Promise(r=>{ const f=new FileReader(); f.onload=()=>r(f.result); f.readAsDataURL(b); });
+async function hashOf(b){ if(b.__h) return b.__h; const h=[...new Uint8Array(await crypto.subtle.digest('SHA-256',await b.arrayBuffer()))].slice(0,12).map(x=>x.toString(16).padStart(2,'0')).join(''); try{b.__h=h}catch(e){} return h; }
+const CH = 900000;
+async function upPhoto(b, known){
+  const h=await hashOf(b); if(known.has(h)) return h;
+  const s=await b64(b), n=Math.ceil(s.length/CH);
+  for(let i=0;i<n;i++) await col('photos').doc(`${h}_${i}`).set({d:s.slice(i*CH,(i+1)*CH)});
+  await col('photos').doc(h).set({n}); known.add(h); return h;
+}
+const pCache = new Map();
+async function downPhoto(h){
+  if(!h) return null; if(pCache.has(h)) return pCache.get(h);
+  const m=await col('photos').doc(h).get(); if(!m.exists) return null;
+  let s=''; for(let i=0;i<m.data().n;i++){ const d=await col('photos').doc(`${h}_${i}`).get(); s+=d.data().d; }
+  const b=await (await fetch(s)).blob(); try{b.__h=h}catch(e){} pCache.set(h,b); return b;
+}
+window.__sync = async function(){
+  if(!fb||!fUser) return; if(syncing){ again=true; return; } syncing=true; sStat('Synchronisation…');
+  try{
+    const remote=new Map(); (await col('maillots').get()).forEach(d=>remote.set(d.id,d.data()));
+    const known=new Set(); remote.forEach(r=>[r.front,r.back,...(r.more||[])].forEach(h=>h&&known.add(h)));
+    let tombs={}; try{ tombs=JSON.parse(localStorage.getItem('vx_tombs')||'{}'); }catch(e){}
+    const local=new Map((await DB.all()).filter(i=>!i.example).map(i=>[i.id,i]));
+    let changed=false;
+    for(const [id,r] of remote){
+      const l=local.get(id), lt=(l&&l.updatedAt)||0;
+      if(tombs[id]&&tombs[id]>=(r.updatedAt||0)) continue;
+      if(r.deleted){ if(l&&lt<=r.updatedAt){ await DB.del(id,true); changed=true; } continue; }
+      if(!l||r.updatedAt>lt){
+        const o={...r}; o.front=await downPhoto(r.front); o.back=await downPhoto(r.back); o.more=(await Promise.all((r.more||[]).map(downPhoto))).filter(Boolean);
+        if(!o.back) delete o.back; await DB.put(o,true); changed=true;
+      }
+    }
+    for(const [id,l] of local){
+      const r=remote.get(id); if(r&&!r.deleted&&(r.updatedAt||0)>=(l.updatedAt||0)) continue; if(r&&r.deleted&&r.updatedAt>=(l.updatedAt||0)) continue;
+      const o={}; for(const k in l){ const v=l[k]; if(k[0]==='_'||v instanceof Blob||k==='more') continue; o[k]=v; }
+      o.front=l.front?await upPhoto(l.front,known):null; o.back=l.back?await upPhoto(l.back,known):null;
+      o.more=[]; for(const b of (l.more||[])) o.more.push(await upPhoto(b,known));
+      o.updatedAt=l.updatedAt||Date.now(); o.deleted=false;
+      await col('maillots').doc(id).set(o);
+    }
+    for(const id in tombs){ const r=remote.get(id); if(r&&(!r.deleted||r.updatedAt<tombs[id])) await col('maillots').doc(id).set({deleted:true,updatedAt:tombs[id]}); }
+    try{ localStorage.setItem('vx_tombs','{}'); }catch(e){}
+    if(changed){ items=await DB.all(); render(); }
+    LS.set('vx_lastSync',Date.now()); sStat(`Connecté : ${fUser.email} · synchronisé à ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}`);
+  }catch(e){ console.error(e); sStat('Synchro impossible pour l\'instant, nouvel essai automatique.'); setTimeout(()=>window.__sync(),30000); }
+  syncing=false; if(again){ again=false; window.__sync(); }
+};
+$('#sync-in').onclick=async()=>{ try{ await fbInit(); await fb.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); toast('Connecté, synchronisation en cours'); }catch(e){ console.error(e); toast('Connexion annulée ou bloquée'); } };
+$('#sync-out').onclick=async()=>{ if(fb) await fb.auth.signOut(); toast('Déconnecté. Tes maillots restent sur cet appareil.'); };
+$('#sync-now').onclick=()=>window.__sync();
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') window.__sync(); });
+drawSync(); fbInit().catch(()=>sStat('Connexion au service impossible, vérifie ta connexion internet.'));
 
 /* ---------- démarrage ---------- */
 (async()=>{
