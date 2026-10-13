@@ -14,8 +14,8 @@
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
-<title>La Vitrine</title>
-<meta name="apple-mobile-web-app-title" content="La Vitrine">
+<title>Vitrine</title>
+<meta name="apple-mobile-web-app-title" content="Vitrine">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jersey+10&family=Big+Shoulders+Display:wght@600;800;900&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -50,7 +50,7 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:12p
 .brand-wrap .brand{line-height:1;padding:0;margin:0;text-box:trim-both cap alphabetic}
 .brand-wrap{min-height:52px}
 .logo{display:block;flex:0 0 auto}
-.logo{width:52px;height:52px}
+.logo{width:64px;height:64px}
 .brand{font-family:var(--f-display);font-weight:900;font-size:clamp(36px,9.6vw,55px);line-height:.9;letter-spacing:.01em;text-transform:uppercase}
 .brand small{display:block;font:600 12px/1 var(--f-num);letter-spacing:.18em;color:var(--gold);margin-bottom:6px}
 .top-r{display:flex;align-items:center;gap:14px}
@@ -275,7 +275,7 @@ nav.tabs button[aria-selected="true"]::after{content:"";display:block;height:2px
 
 <div class="wrap">
   <header class="top">
-    <div class="brand-wrap"><img class="logo" src="icons/logo.png?v=14" alt=""><div class="brand">La Vitrine</div></div>
+    <div class="brand-wrap"><img class="logo" src="icons/logo.png?v=14" alt="Vitrine"></div>
     <div class="top-r"><button type="button" class="icon gear" id="open-manage" aria-label="Gérer les noms"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg></button><div class="count"><b id="cnt">0</b>maillots<span id="sync-state" class="sync-state"></span></div></div>
   </header>
   <div id="reminder" class="banner" hidden></div>
@@ -963,12 +963,13 @@ async function makeStory(it){
   const blob=await new Promise(r=>c.toBlob(r,'image/png'));
   saveFile(`story-${slug(it.club)}-${slug(it.saison)}.png`,blob,'Story prête à partager');
 }
+function flagImg(){ return new Promise(r=>{ const i=new Image(); i.onload=()=>{ const c=document.createElement('canvas'); c.width=i.width; c.height=i.height; const g=c.getContext('2d'); g.drawImage(i,0,0); const d=g.getImageData(0,0,c.width,c.height); for(let k=0;k<d.data.length;k+=4){ if(d.data[k]<60&&d.data[k+1]<60&&d.data[k+2]<60) d.data[k]=d.data[k+1]=d.data[k+2]=255; } g.putImageData(d,0,0); r(c); }; i.onerror=()=>r(null); i.src='icons/logo.png?v=14'; }); }
 async function makeLabel(it){
   try{ await document.fonts.load(`900 80px ${DISP}`); }catch(e){}
   const W=1200,H=700, c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
   x.fillStyle='#000'; x.fillRect(0,0,W,H);
   x.strokeStyle=goldGrad(x,0,0,W,H); x.lineWidth=14; x.strokeRect(24,24,W-48,H-48); x.lineWidth=3; x.strokeRect(48,48,W-96,H-96);
-  x.textAlign='left'; x.fillStyle=goldGrad(x,90,0,700,0); x.font=`700 30px ${COND}`; x.fillText('LA VITRINE',90,120);
+  const fl=await flagImg(); if(fl) x.drawImage(fl,84,66,84,84); x.font=`700 30px ${COND}`;
   x.textAlign='right'; x.fillStyle='#a8a8a8'; x.fillText([it.type,it.version].filter(Boolean).join(' · ').toUpperCase(),W-90,120);
   x.textAlign='left'; x.fillStyle=goldGrad(x,90,170,W-90,290); fitText(x,it.club.toUpperCase(),W-180,120,900,DISP); x.fillText(it.club.toUpperCase(),90,270);
   x.fillStyle='#fff'; x.font=`600 56px ${COND}`; x.fillText([it.saison,it.pays,it.marque].filter(Boolean).join(' · ').toUpperCase(),90,350);
