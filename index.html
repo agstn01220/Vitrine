@@ -107,7 +107,7 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:12p
 .fab{display:grid;place-items:center;padding:0;line-height:0;position:fixed;right:18px;bottom:calc(80px + env(safe-area-inset-bottom,0px));z-index:20;width:60px;height:60px;border-radius:50%;border:none;background:var(--gold-metal);background-size:250% 100%;animation:sheen 6s ease-in-out infinite;color:var(--gold-ink);font:900 34px/60px var(--f-display);box-shadow:0 10px 30px rgba(0,0,0,.5)}
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:15;display:flex;justify-content:center;gap:4px;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px))}
 nav.tabs button{flex:1;min-width:0;max-width:180px;background:none;border:none;padding:8px 2px;border-radius:8px;font:700 13px var(--f-num);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.wash ul{margin:0;padding-left:18px;font-size:15px;line-height:1.5}.wash li{margin:4px 0}.wash li b{color:var(--gold)}
+.page .wash{padding:16px 16px 0}.wash ul{margin:0;padding-left:18px;font-size:15px;line-height:1.5}.wash li{margin:4px 0}.wash li b{color:var(--gold)}
 nav.tabs button[aria-selected="true"]{color:var(--fg);background:var(--panel-2)}
 nav.tabs button[aria-selected="true"]::after{content:"";display:block;height:2px;width:22px;margin:4px auto 0;background:var(--gold-metal)}
 /* stats */
@@ -301,36 +301,6 @@ nav.tabs button[aria-selected="true"]::after{content:"";display:block;height:2px
   <section id="v-clubs" hidden></section>
   <section id="v-stats" hidden></section>
 
-  <section id="v-wash" hidden>
-    <div class="save wash">
-      <div class="panel"><h3>Machine</h3><ul>
-        <li><b>Maillot retourné</b> (à l'envers) pour protéger flocage, écussons et sponsors.</li>
-        <li><b>30 °C maximum</b>, idéalement à froid (20 à 30 °C).</li>
-        <li>Programme <b>délicat</b> ou synthétique.</li>
-        <li>Essorage <b>400 à 600 tours/min</b>, jamais plus de 800.</li>
-        <li>Dans un <b>filet de lavage</b>, avec des couleurs proches, sans jean, fermeture éclair ni velcro.</li>
-      </ul></div>
-      <div class="panel"><h3>Lessive</h3><ul>
-        <li>Lessive <b>liquide douce</b>, en petite quantité.</li>
-        <li><b>Pas d'adoucissant</b> : il bouche le tissu technique.</li>
-        <li><b>Pas de javel</b> ni de détachant agressif.</li>
-      </ul></div>
-      <div class="panel"><h3>Séchage et repassage</h3><ul>
-        <li><b>Jamais de sèche-linge</b> : le flocage craquelle et se décolle.</li>
-        <li>Sur un cintre ou à plat, <b>à l'ombre</b>, pas en plein soleil.</li>
-        <li>Repassage à éviter. Sinon : à l'envers, fer doux, <b>jamais sur le flocage</b> ni les patchs.</li>
-      </ul></div>
-      <div class="panel"><h3>Maillots de collection</h3><ul>
-        <li><b>Signé</b> ou porté en match : ne pas le laver, la signature part au lavage.</li>
-        <li><b>Vintage</b> (années 80-90) : lavage à la main, à l'eau froide.</li>
-        <li>Petite tache : à la main, eau froide et savon doux, sans frotter le flocage.</li>
-      </ul></div>
-      <div class="panel"><h3>Rangement</h3><ul>
-        <li>Cintre large ou plié, <b>à l'abri de la lumière</b>.</li>
-        <li>Housse en tissu respirant, pas de plastique.</li>
-      </ul></div>
-    </div>
-  </section>
   <section id="v-save" hidden>
     <div class="save">
       <div class="panel">
@@ -398,6 +368,39 @@ nav.tabs button[aria-selected="true"]::after{content:"";display:block;height:2px
 
 <div id="zoom" class="zoom" hidden><img id="z-img" alt=""><div class="zbar"><button class="icon" id="z-out" aria-label="Dézoomer">−</button><button class="icon" id="z-in" aria-label="Zoomer">+</button><button class="icon" id="z-close" aria-label="Fermer le zoom">✕</button></div><span class="zhint">Pince ou double-tape pour zoomer</span></div>
 
+<div id="wash" class="page" hidden>
+  <div class="mg-wrap">
+    <header class="pg-head"><button type="button" class="pg-back" id="w-back" aria-label="Retour">←</button><h2>Lavage</h2><span></span></header>
+    <div class="save wash">
+      <div class="panel"><h3>Machine</h3><ul>
+        <li><b>Maillot retourné</b> (à l'envers) pour protéger flocage, écussons et sponsors.</li>
+        <li><b>30 °C maximum</b>, idéalement à froid (20 à 30 °C).</li>
+        <li>Programme <b>délicat</b> ou synthétique.</li>
+        <li>Essorage <b>400 à 600 tours/min</b>, jamais plus de 800.</li>
+        <li>Dans un <b>filet de lavage</b>, avec des couleurs proches, sans jean, fermeture éclair ni velcro.</li>
+      </ul></div>
+      <div class="panel"><h3>Lessive</h3><ul>
+        <li>Lessive <b>liquide douce</b>, en petite quantité.</li>
+        <li><b>Pas d'adoucissant</b> : il bouche le tissu technique.</li>
+        <li><b>Pas de javel</b> ni de détachant agressif.</li>
+      </ul></div>
+      <div class="panel"><h3>Séchage et repassage</h3><ul>
+        <li><b>Jamais de sèche-linge</b> : le flocage craquelle et se décolle.</li>
+        <li>Sur un cintre ou à plat, <b>à l'ombre</b>, pas en plein soleil.</li>
+        <li>Repassage à éviter. Sinon : à l'envers, fer doux, <b>jamais sur le flocage</b> ni les patchs.</li>
+      </ul></div>
+      <div class="panel"><h3>Maillots de collection</h3><ul>
+        <li><b>Signé</b> ou porté en match : ne pas le laver, la signature part au lavage.</li>
+        <li><b>Vintage</b> (années 80-90) : lavage à la main, à l'eau froide.</li>
+        <li>Petite tache : à la main, eau froide et savon doux, sans frotter le flocage.</li>
+      </ul></div>
+      <div class="panel"><h3>Rangement</h3><ul>
+        <li>Cintre large ou plié, <b>à l'abri de la lumière</b>.</li>
+        <li>Housse en tissu respirant, pas de plastique.</li>
+      </ul></div>
+    </div>
+  </div>
+</div>
 <div id="manage" class="page" hidden>
   <div class="mg-wrap">
     <header class="pg-head"><button type="button" class="pg-back" id="m-back" aria-label="Retour">←</button><h2>Gérer les noms</h2><span></span></header>
@@ -891,14 +894,11 @@ $('#fab').onclick=()=>openEditor(null);
 /* ---------- onglets & filtres ---------- */
 document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('nav.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
-  ['gallery','clubs','stats','wash','save'].forEach(v=>$('#v-'+v).hidden = v!==b.dataset.v);
+  ['gallery','clubs','stats','save'].forEach(v=>$('#v-'+v).hidden = v!==b.dataset.v);
   $('#fab').hidden = b.dataset.v!=='gallery'; LS.set('vx_tab',b.dataset.v); window.scrollTo(0,0);
 });
-$('#open-wash').onclick=()=>{
-  document.querySelectorAll('nav.tabs button').forEach(x=>x.setAttribute('aria-selected',false));
-  ['gallery','clubs','stats','wash','save'].forEach(v=>$('#v-'+v).hidden = v!=='wash');
-  $('#fab').hidden=true; window.scrollTo(0,0);
-};
+$('#open-wash').onclick=()=>{ $('#wash').hidden=false; document.body.style.overflow='hidden'; };
+$('#w-back').onclick=()=>{ $('#wash').hidden=true; document.body.style.overflow=''; };
 $('#q').oninput=e=>{F.q=e.target.value; render();};
 document.addEventListener('change',e=>{ if(e.target.matches('select')&&!e.target.closest('.mf')) e.target.blur(); });
 /* ---------- gérer les noms ---------- */
