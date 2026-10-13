@@ -575,7 +575,7 @@ function renderStats(){ renderClubs();
     <div class="panels">
       <div class="panel"><h3>Par club</h3>${bars(by(i=>i.club),n)}</div>
       <div class="panel"><h3>Par pays</h3>${bars(by(i=>i.pays),n)}</div>
-      <div class="panel"><h3>Par pays de fabrication</h3>${bars(by(i=>i.fab||i.pays),n)}</div>
+      <div class="panel"><h3>Par pays de fabrication</h3>${bars(by(i=>i.fab),n)}</div>
       <div class="panel"><h3>Par décennie</h3>${bars(by(i=>{const y=yearOf(i.saison);return y?`Années ${Math.floor(y/10)*10}`:null}),n)}</div>
       <div class="panel"><h3>Par marque</h3>${bars(by(i=>i.marque),n)}</div>
       <div class="panel"><h3>Par type</h3>${bars(by(i=>i.type),n)}</div>
