@@ -134,7 +134,7 @@ nav.tabs button[aria-selected="true"]::after{content:"";display:block;height:2px
 @keyframes fade{from{opacity:0}}
 .ov-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .icon{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--panel);font-size:18px;display:grid;place-items:center;color:#111}
-.stage{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;min-height:0;perspective:1400px;touch-action:pan-y}
+.stage{flex:0 0 auto;margin-top:3vh;display:flex;align-items:center;justify-content:center;gap:10px;min-height:0;perspective:1400px;touch-action:pan-y}
 .flip{position:relative;width:min(78vw,52vh,440px);aspect-ratio:4/5;cursor:pointer}
 .flip-inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.3,.8,.3,1)}
 .flip.back .flip-inner{transform:rotateY(180deg)}
@@ -147,7 +147,7 @@ nav.tabs button[aria-selected="true"]::after{content:"";display:block;height:2px
 .fiche b{display:block;font:900 86px/1 var(--f-display);color:var(--fg)}
 .nav-arrow{flex:0 0 auto}
 @media(max-width:600px){.nav-arrow{display:none}}
-.details{max-width:520px;width:100%;margin:10px auto 0;text-align:center}
+.details{max-width:520px;width:100%;margin:10px auto 0;text-align:center;flex:1 1 auto;min-height:0;overflow-y:auto}
 .d-head{display:flex;align-items:center;justify-content:center;gap:12px}
 .d-head h2,.club-head h2{text-box:trim-both cap alphabetic}
 .details h2{margin:0;font:900 clamp(31px,8.4vw,46px)/1 var(--f-display);text-transform:uppercase;text-wrap:balance}
