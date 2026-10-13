@@ -348,7 +348,7 @@ nav.tabs button[aria-selected="true"]::after{content:"";display:block;height:2px
       </div>
       <div class="panel">
         <h3>Catalogue PDF</h3>
-        <p>Toute ta collection en PDF, avec photo, détails et valeurs. Pratique pour l'assurance ou une vente.</p>
+        <p>Toute ta collection en PDF, avec photo, détails et prix. Pratique pour l'assurance ou une vente.</p>
         <button id="btn-pdf" class="btn gold">Exporter le catalogue PDF</button>
         <p class="note" id="last-backup"></p>
       </div>
@@ -438,7 +438,7 @@ nav.tabs button[aria-selected="true"]::after{content:"";display:block;height:2px
       <label class="ck"><input type="checkbox" id="i-patch"> Patch</label>
       <label class="ck"><input type="checkbox" id="i-signe"> Signé</label>
       <label>Prix d'achat<span class="euro"><input id="i-prix" inputmode="decimal" placeholder="150"><i>€</i></span><small>Visible uniquement par toi</small></label>
-      <label>Valeur estimée<span class="euro"><input id="i-valeur" inputmode="decimal" placeholder="200"><i>€</i></span><small>Ce que vaut le maillot aujourd'hui</small></label>
+      <label hidden>Valeur estimée<span class="euro"><input id="i-valeur" inputmode="decimal" placeholder="200"><i>€</i></span><small>Ce que vaut le maillot aujourd'hui</small></label>
       <label>Date d'achat<input id="i-date" type="date"></label>
       <label>Provenance<input id="i-prov" placeholder="eBay, Vinted, boutique…"></label>
       <label>Description (public)<textarea id="i-desc" rows="3" placeholder="Décris ce maillot pour les autres collectionneurs…"></textarea></label>
@@ -563,13 +563,10 @@ function renderStats(){ renderClubs();
   const n=items.length, val=items.reduce((s,i)=>s+(+i.prix||0),0), priced=items.filter(i=>+i.prix>0).length;
   const by=(f)=>{const m=new Map(); items.forEach(i=>{const k=f(i); if(k) m.set(k,(m.get(k)||0)+1)}); return m;};
   const ys=items.map(i=>yearOf(i.saison)).filter(Boolean);
-  const est=items.reduce((s,i)=>s+(+i.valeur||+i.prix||0),0), pv=items.filter(i=>+i.valeur>0).reduce((s,i)=>s+(+i.valeur-(+i.prix||0)),0);
   const eurK=v=>eur(v).replace('€','<i class="cur">€</i>');
   $('#v-stats').innerHTML=`<div class="kpis">
     <div class="kpi"><span>Maillots</span><b>${n}</b></div>
     <div class="kpi"><span>Prix d'achat total</span><b>${eurK(val)}</b></div>
-    <div class="kpi"><span>Valeur estimée</span><b>${eurK(est)}</b></div>
-    <div class="kpi"><span>Plus-value</span><b class="pv ${pv<0?'neg':'pos'}">${pv>0?'+':''}${eurK(pv)}</b></div>
     <div class="kpi"><span>Prix moyen</span><b>${eurK(priced?val/priced:0)}</b></div>
     <div class="kpi"><span>Plus ancien</span><b>${ys.length?Math.min(...ys):'—'}</b></div></div>
     <div class="panels">
@@ -600,7 +597,7 @@ function showCur(){
   $('#c-front').src = url(it,'front'); $('#c-front').alt = it.club+' recto';
   $('#c-backface').innerHTML = `<div class="fiche"><span class="hint">${esc(it.saison||'')} · ${esc(it.type||'')}</span><b>${esc(it.numero||'—')}</b>${esc(it.joueur||'Sans flocage')}<br><span class="hint">${esc(it.club)}</span></div>`;
   $('#pos').textContent = `${cur+1} / ${view.length} · Touche la photo pour zoomer`;
-  const facts=[['N° de série',it.serie],['Version',it.version],['Signé',it.signe?'Oui':''],['Patch',it.patch?'Oui':''],['Taille',it.taille],['État',it.etat],['Prix',it.prix?eur(+it.prix):''],['Valeur estimée',it.valeur?eur(+it.valeur):''],['Provenance',it.provenance]].filter(f=>f[1]);
+  const facts=[['N° de série',it.serie],['Version',it.version],['Signé',it.signe?'Oui':''],['Patch',it.patch?'Oui':''],['Taille',it.taille],['État',it.etat],['Prix',it.prix?eur(+it.prix):''],['Provenance',it.provenance]].filter(f=>f[1]);
   $('#c-details').innerHTML=`<div class="d-head">${it.pays?flagHTML(it.pays):''}<h2>${esc(it.club)}</h2></div>
     <div class="sub">${[it.saison,it.type,it.marque,it.joueur&&(it.joueur+(it.numero?' #'+it.numero:''))].filter(Boolean).map(esc).join(' · ')}</div>
     <div class="facts">${facts.map(f=>`<span>${f[0]} <b>${esc(f[1])}</b></span>`).join('')}</div>
@@ -757,7 +754,7 @@ async function exportPDF(){
   toast('Création du catalogue…');
   const {jsPDF}=window.jspdf, doc=new jsPDF({unit:'mm',format:'a4'});
   const W=210,H=297,G=[224,72,62], list=[...items].sort((a,b)=>a.club.localeCompare(b.club,'fr')||(yearOf(a.saison)||0)-(yearOf(b.saison)||0));
-  const val=list.reduce((s,i)=>s+(+i.prix||0),0), est=list.reduce((s,i)=>s+(+i.valeur||+i.prix||0),0);
+  const val=list.reduce((s,i)=>s+(+i.prix||0),0);
   const e2=n=>String(Math.round(n||0)).replace(/\B(?=(\d{3})+(?!\d))/g,' ')+' EUR';
   doc.setFillColor(0,0,0); doc.rect(0,0,W,H,'F');
   doc.setDrawColor(...G); doc.setLineWidth(1.2); doc.rect(12,12,W-24,H-24); doc.setLineWidth(.3); doc.rect(16,16,W-32,H-32);
@@ -765,7 +762,7 @@ async function exportPDF(){
   doc.setTextColor(255,255,255); doc.setFont('helvetica','normal'); doc.setFontSize(16); doc.text('Catalogue de la collection',W/2,134,{align:'center'});
   doc.setFontSize(12); doc.setTextColor(168,168,168);
   doc.text(`${list.length} maillots · ${new Set(list.map(i=>i.club)).size} clubs`,W/2,160,{align:'center'});
-  doc.text(`Prix d'achat total : ${e2(val)}   ·   Valeur estimée : ${e2(est)}`,W/2,168,{align:'center'});
+  doc.text(`Prix d'achat total : ${e2(val)}`,W/2,168,{align:'center'});
   doc.text(`Édité le ${new Date().toLocaleDateString('fr-FR')}`,W/2,176,{align:'center'});
   const cols=2, rows=3, mx=14, my=18, cw=(W-2*mx)/cols, ch=(H-2*my-8)/rows;
   for(let k=0;k<list.length;k++){
@@ -783,7 +780,7 @@ async function exportPDF(){
     const lines=[[it.saison,it.type].filter(Boolean).join(' · '),[it.marque,it.version].filter(Boolean).join(' · '),
       (it.joueur||it.numero)?`${it.joueur||''}${it.numero?' #'+it.numero:''}`:'',[it.taille&&'Taille '+it.taille,it.etat].filter(Boolean).join(' · '),
       [it.signe&&'Signé',it.patch&&'Patch'].filter(Boolean).join(' · '),it.serie?'N° de série : '+it.serie:'',it.code?'Code : '+it.code:'',it.fab?'Fabriqué : '+it.fab:'',
-      it.prix?"Achat : "+e2(it.prix)+(it.date?' ('+new Date(it.date).toLocaleDateString('fr-FR')+')':''):'',it.valeur?'Valeur estimée : '+e2(it.valeur):''].filter(Boolean);
+      it.prix?"Achat : "+e2(it.prix)+(it.date?' ('+new Date(it.date).toLocaleDateString('fr-FR')+')':''):''].filter(Boolean);
     for(const l of lines){ const sp=doc.splitTextToSize(l,tw); if(ty+sp.length*3.8>y0+ch-6) break; doc.text(sp,tx,ty); ty+=sp.length*3.8+.6; }
   }
   const blob=doc.output('blob');
