@@ -32,7 +32,7 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
-html,body{height:100%}
+html{min-height:calc(100% + env(safe-area-inset-top,0px))}body{min-height:100%}
 body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--f-body);-webkit-tap-highlight-color:transparent}
 body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(55% 35% at 50% -5%,rgba(233,194,91,.14),transparent 70%)}
 button,input,select,textarea{font:inherit;color:var(--fg)}
