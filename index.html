@@ -132,7 +132,7 @@ nav.tabs button[aria-selected="true"]::after{content:"";display:block;height:2px
 .overlay{--fg:#ffffff;--muted:#9a9a9a;color:var(--fg);position:fixed;inset:0;z-index:40;background:rgba(5,8,12,.92);backdrop-filter:blur(6px);display:flex;flex-direction:column;padding:calc(10px + env(safe-area-inset-top,0px)) 16px calc(14px + env(safe-area-inset-bottom,0px));animation:fade .2s ease}
 @keyframes fade{from{opacity:0}}
 .ov-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.icon{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--panel);font-size:18px;display:grid;place-items:center}
+.icon{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--panel);font-size:18px;display:grid;place-items:center;color:#111}
 .stage{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;min-height:0;perspective:1400px;touch-action:pan-y}
 .flip{position:relative;width:min(78vw,52vh,440px);aspect-ratio:4/5;cursor:pointer}
 .flip-inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.3,.8,.3,1)}
