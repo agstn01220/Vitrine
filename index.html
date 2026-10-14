@@ -8,9 +8,9 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/icon-180.png?v=15" sizes="180x180">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=15">
-<link rel="icon" href="favicon.ico?v=15" sizes="any">
+<link rel="apple-touch-icon" href="icons/icon-180.png?v=16" sizes="180x180">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=16">
+<link rel="icon" href="favicon.ico?v=16" sizes="any">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
@@ -275,7 +275,7 @@ nav.tabs button[aria-selected="true"]::after{content:"";display:block;height:2px
 
 <div class="wrap">
   <header class="top">
-    <div class="brand-wrap"><img class="logo" src="icons/logo.png?v=15" alt="Vitrine"></div>
+    <div class="brand-wrap"><img class="logo" src="icons/logo.png?v=16" alt="Vitrine"></div>
     <div class="top-r"><button type="button" class="icon" id="open-wash" aria-label="Lavage"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="2"/><path d="M4 7h16"/><circle cx="12" cy="14" r="4.5"/><path d="M7 4.8h.01M10 4.8h.01"/></svg></button><button type="button" class="icon gear" id="open-manage" aria-label="Gérer les noms"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg></button><div class="count"><b id="cnt">0</b>maillots<span id="sync-state" class="sync-state"></span></div></div>
   </header>
   <div id="reminder" class="banner" hidden></div>
@@ -589,7 +589,7 @@ function renderStats(){ renderClubs();
 function renderReminder(){  const last=+LS.get('vx_lastBackup')||0, real=items.filter(i=>!i.example).length, b=$('#reminder');
   const days = last? Math.floor((Date.now()-last)/864e5) : null;
   $('#last-backup').textContent = last ? `Dernière sauvegarde : ${new Date(last).toLocaleDateString('fr-FR')} (il y a ${days} j).` : 'Aucune sauvegarde pour l’instant.';
-  if(real>0 && (days===null || days>=7)){
+  if(real>0 && !window.__signedIn && (days===null || days>=7)){
     b.innerHTML=`<span>${days===null?'<b>Collection jamais sauvegardée.</b>':`<b>Dernière sauvegarde il y a ${days} jours.</b>`} Vider le cache du navigateur efface tout.</span><button class="btn small gold" id="rem-save">Sauvegarder</button>`;
     b.hidden=false; $('#rem-save').onclick=exportZip;
   } else b.hidden=true;
@@ -969,7 +969,7 @@ async function makeStory(it){
   const blob=await new Promise(r=>c.toBlob(r,'image/png'));
   saveFile(`story-${slug(it.club)}-${slug(it.saison)}.png`,blob,'Story prête à partager');
 }
-function flagImg(){ return new Promise(r=>{ const i=new Image(); i.onload=()=>{ const c=document.createElement('canvas'); c.width=i.width; c.height=i.height; const g=c.getContext('2d'); g.drawImage(i,0,0); const d=g.getImageData(0,0,c.width,c.height); for(let k=0;k<d.data.length;k+=4){ if(d.data[k]<60&&d.data[k+1]<60&&d.data[k+2]<60) d.data[k]=d.data[k+1]=d.data[k+2]=255; } g.putImageData(d,0,0); r(c); }; i.onerror=()=>r(null); i.src='icons/logo.png?v=15'; }); }
+function flagImg(){ return new Promise(r=>{ const i=new Image(); i.onload=()=>{ const c=document.createElement('canvas'); c.width=i.width; c.height=i.height; const g=c.getContext('2d'); g.drawImage(i,0,0); const d=g.getImageData(0,0,c.width,c.height); for(let k=0;k<d.data.length;k+=4){ if(d.data[k]<60&&d.data[k+1]<60&&d.data[k+2]<60) d.data[k]=d.data[k+1]=d.data[k+2]=255; } g.putImageData(d,0,0); r(c); }; i.onerror=()=>r(null); i.src='icons/logo.png?v=16'; }); }
 async function makeLabel(it){
   try{ await document.fonts.load(`900 80px ${DISP}`); }catch(e){}
   const W=1200,H=700, c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
@@ -1020,7 +1020,7 @@ async function fbInit(){
   firebase.initializeApp(FB_CONFIG);
   const db=firebase.firestore(); db.settings({ignoreUndefinedProperties:true, merge:true});
   fb={auth:firebase.auth(), db};
-  fb.auth.onAuthStateChanged(u=>{ fUser=u; drawSync(); if(unsub){unsub();unsub=null;} if(u){ unsub=col('maillots').onSnapshot(s=>{ if(!s.metadata.hasPendingWrites) window.__sync(); }, ()=>{}); } });
+  fb.auth.onAuthStateChanged(u=>{ fUser=u; window.__signedIn=!!u; try{renderReminder()}catch(e){} drawSync(); if(unsub){unsub();unsub=null;} if(u){ unsub=col('maillots').onSnapshot(s=>{ if(!s.metadata.hasPendingWrites) window.__sync(); }, ()=>{}); } });
   return fb;
 }
 const col = n => fb.db.collection('users').doc(fUser.uid).collection(n);
