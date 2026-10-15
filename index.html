@@ -589,7 +589,7 @@ function renderStats(){ renderClubs();
 function renderReminder(){  const last=+LS.get('vx_lastBackup')||0, real=items.filter(i=>!i.example).length, b=$('#reminder');
   const days = last? Math.floor((Date.now()-last)/864e5) : null;
   $('#last-backup').textContent = last ? `Dernière sauvegarde : ${new Date(last).toLocaleDateString('fr-FR')} (il y a ${days} j).` : 'Aucune sauvegarde pour l’instant.';
-  if(real>0 && !window.__signedIn && (days===null || days>=7)){
+  if(real>0 && !(window.__signedIn ?? LS.get('vx_signedIn')==='1') && (days===null || days>=7)){
     b.innerHTML=`<span>${days===null?'<b>Collection jamais sauvegardée.</b>':`<b>Dernière sauvegarde il y a ${days} jours.</b>`} Vider le cache du navigateur efface tout.</span><button class="btn small gold" id="rem-save">Sauvegarder</button>`;
     b.hidden=false; $('#rem-save').onclick=exportZip;
   } else b.hidden=true;
@@ -1020,7 +1020,7 @@ async function fbInit(){
   firebase.initializeApp(FB_CONFIG);
   const db=firebase.firestore(); db.settings({ignoreUndefinedProperties:true, merge:true});
   fb={auth:firebase.auth(), db};
-  fb.auth.onAuthStateChanged(u=>{ fUser=u; window.__signedIn=!!u; try{renderReminder()}catch(e){} drawSync(); if(unsub){unsub();unsub=null;} if(u){ unsub=col('maillots').onSnapshot(s=>{ if(!s.metadata.hasPendingWrites) window.__sync(); }, ()=>{}); } });
+  fb.auth.onAuthStateChanged(u=>{ fUser=u; window.__signedIn=!!u; LS.set('vx_signedIn',u?'1':'0'); try{renderReminder()}catch(e){} drawSync(); if(unsub){unsub();unsub=null;} if(u){ unsub=col('maillots').onSnapshot(s=>{ if(!s.metadata.hasPendingWrites) window.__sync(); }, ()=>{}); } });
   return fb;
 }
 const col = n => fb.db.collection('users').doc(fUser.uid).collection(n);
