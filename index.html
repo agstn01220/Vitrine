@@ -687,8 +687,7 @@ function flagCode(name){
   const c=CN[norm(name)]; if(!c) return '';
   return ({ENG:'gb-eng',SCT:'gb-sct',WLS:'gb-wls',NIR:'gb-nir'})[c]||c.toLowerCase();
 }
-const FR={"ae":2.0,"al":1.4,"ar":1.6,"at":1.5,"au":2.0,"ba":2.0,"bd":1.667,"be":1.154,"bg":1.667,"br":1.429,"ca":2.0,"cd":1.333,"ch":1.0,"ci":1.5,"cl":1.5,"cm":1.5,"cn":1.5,"co":1.5,"cr":1.667,"cy":1.5,"cz":1.5,"de":1.667,"dk":1.321,"dz":1.5,"ec":1.5,"eg":1.5,"es":1.5,"fi":1.636,"fr":1.5,"gb-eng":1.667,"gb-nir":2.0,"gb-sct":1.667,"gb-wls":1.667,"gb":2.0,"ge":1.5,"gh":1.5,"gr":1.5,"gt":1.6,"hk":1.5,"hn":2.0,"hr":2.0,"hu":2.0,"id":1.5,"ie":2.0,"il":1.375,"in":1.5,"ir":1.75,"is":1.389,"it":1.5,"jm":2.0,"jo":2.0,"jp":1.5,"kh":1.562,"kr":1.5,"lk":2.0,"lu":1.667,"ma":1.5,"mc":1.25,"me":2.0,"mk":2.0,"ml":1.5,"mm":1.5,"mo":1.5,"mx":1.75,"my":2.0,"ng":2.0,"nl":1.5,"no":1.375,"nz":2.0,"pe":1.5,"ph":2.0,"pk":1.5,"pl":1.6,"pt":1.5,"py":1.818,"qa":2.545,"ro":1.5,"rs":1.5,"ru":1.5,"sa":1.5,"se":1.6,"si":2.0,"sk":1.5,"sn":1.5,"sv":1.772,"th":1.5,"tn":1.5,"tr":1.5,"tw":1.5,"ua":1.5,"us":1.9,"uy":1.5,"ve":1.5,"vn":1.5,"za":1.5};
-const flagHTML=(name,lg)=>{ const c=flagCode(name); return `<span class="flag${lg?' lg':''}" title="${esc(name)}"${c?` style="width:${Math.round(18*(FR[c]||1.5))}px"`:''}>${c?`<img src="flags/${c}.svg?v=17" alt="" loading="lazy">`:''}</span>`; };
+const flagHTML=(name,lg)=>{ const c=flagCode(name); return `<span class="flag${lg?' lg':''}" title="${esc(name)}">${c?`<img src="flags/${c}.svg" alt="" loading="lazy">`:''}</span>`; };
 
 /* ---------- vue clubs / pays ---------- */
 let CV={mode:'pays', club:null, country:null}; try{ CV.mode=LS.get('vx_cmode')||'pays'; }catch(e){}
