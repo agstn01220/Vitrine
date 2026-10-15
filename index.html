@@ -50,7 +50,7 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:12p
 .brand-wrap .brand{line-height:1;padding:0;margin:0;text-box:trim-both cap alphabetic}
 .brand-wrap{min-height:52px}
 .logo{display:block;flex:0 0 auto}
-.logo{width:64px;height:64px}
+.logo{width:64px;height:64px;cursor:pointer}
 .brand{font-family:var(--f-display);font-weight:900;font-size:clamp(36px,9.6vw,55px);line-height:.9;letter-spacing:.01em;text-transform:uppercase}
 .brand small{display:block;font:600 12px/1 var(--f-num);letter-spacing:.18em;color:var(--gold);margin-bottom:6px}
 .top-r{display:flex;align-items:center;gap:14px}
@@ -902,6 +902,7 @@ document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>{
   ['gallery','clubs','stats','save'].forEach(v=>$('#v-'+v).hidden = v!==b.dataset.v);
   $('#fab').hidden = b.dataset.v!=='gallery'; LS.set('vx_tab',b.dataset.v); window.scrollTo(0,0);
 });
+$('.logo').onclick=()=>$('nav.tabs button[data-v="gallery"]').click();
 $('#open-wash').onclick=()=>{ $('#wash').hidden=false; document.body.style.overflow='hidden'; };
 $('#w-back').onclick=()=>{ $('#wash').hidden=true; document.body.style.overflow=''; };
 $('#q').oninput=e=>{F.q=e.target.value; render();};
