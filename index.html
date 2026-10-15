@@ -421,6 +421,7 @@ nav.tabs button[aria-selected="true"]::after{content:"";display:block;height:2px
     <div class="mg-tabs" id="mg-tabs"></div>
     <input type="search" id="mg-q" class="mg-q" placeholder="Rechercher…">
     <ul class="mg-list" id="mg-list"></ul>
+    <input type="file" id="mg-lfile" accept="image/*" hidden>
   </div>
 </div>
 
@@ -981,25 +982,31 @@ $('#w-back').onclick=()=>{ $('#wash').hidden=true; document.body.style.overflow=
 $('#q').oninput=e=>{F.q=e.target.value; render();};
 document.addEventListener('change',e=>{ if(e.target.matches('select')&&!e.target.closest('.mf')) e.target.blur(); });
 /* ---------- gérer les noms ---------- */
-const MG=[['club','Équipes'],['marque','Marques'],['pays','Pays'],['saison','Saisons'],['fab','Pays de fabrication'],['provenance','Provenance']];
+const MG=[['club','Équipes'],['logo','Logos'],['marque','Marques'],['pays','Pays'],['saison','Saisons'],['fab','Pays de fabrication'],['provenance','Provenance']];
 let mgF='club';
 function renderManage(){
   $('#mg-tabs').innerHTML=MG.map(([f,l])=>`<button type="button" class="chip" data-f="${f}" aria-pressed="${f===mgF}">${l}</button>`).join('');
   const q=norm($('#mg-q').value), m=new Map();
-  items.forEach(it=>{ const v=String(it[mgF]||'').trim(); if(v) m.set(v,(m.get(v)||0)+1); });
+  items.forEach(it=>{ const v=String(it[mgF==='logo'?'club':mgF]||'').trim(); if(v) m.set(v,(m.get(v)||0)+1); });
   const rows=[...m].filter(([v])=>!q||norm(v).includes(q)).sort((a,b)=>a[0].localeCompare(b[0],'fr',{numeric:true}));
+  if(mgF==='logo'){ $('#mg-list').innerHTML=rows.length?rows.map(([v])=>{ const has=LOGOS[lkey(v)]?.d; return `<li>${has?logoHTML(v,'cl md'):'<span class="cl md"></span>'}<span class="nm">${esc(v)}</span><button type="button" class="btn small" data-lpick="${esc(v)}">${has?'Changer':'Ajouter'}</button>${has?`<button type="button" class="btn small" data-ldel="${esc(v)}">Retirer</button>`:''}</li>`; }).join(''):'<li class="empty">Rien pour l\'instant.</li>'; return; }
   $('#mg-list').innerHTML=rows.length?rows.map(([v,n])=>`<li>${(mgF==='pays'||mgF==='fab')?flagHTML(v):''}<span class="nm">${esc(v)}</span><span class="ct">${n} maillot${n>1?'s':''}</span><button type="button" class="btn small" data-ren="${esc(v)}">Renommer</button></li>`).join(''):'<li class="empty">Rien pour l\'instant.</li>';
 }
 $('#open-manage').onclick=()=>{ $('#mg-q').value=''; renderManage(); $('#manage').hidden=false; document.body.style.overflow='hidden'; };
 $('#m-back').onclick=()=>{ $('#manage').hidden=true; document.body.style.overflow=''; };
 $('#mg-tabs').onclick=e=>{ const b=e.target.closest('[data-f]'); if(!b) return; mgF=b.dataset.f; $('#mg-q').value=''; renderManage(); };
 $('#mg-q').oninput=renderManage;
+let mgLogo='';
+$('#mg-lfile').onchange=async e=>{ const f=e.target.files[0]; e.target.value=''; if(!f||!mgLogo) return; const u=URL.createObjectURL(f), r=await shrink(u,1); URL.revokeObjectURL(u); if(r){ await setLogo(mgLogo,r); renderManage(); toast('Logo enregistré'); } else toast('Image illisible'); };
 $('#mg-list').onclick=async e=>{
+  const lp=e.target.closest('[data-lpick]'); if(lp){ mgLogo=lp.dataset.lpick; $('#mg-lfile').click(); return; }
+  const ld=e.target.closest('[data-ldel]'); if(ld){ await setLogo(ld.dataset.ldel,null); renderManage(); toast('Logo retiré'); return; }
   const b=e.target.closest('[data-ren]'); if(!b) return;
   const old=b.dataset.ren, nv=(prompt(`Nouveau nom pour « ${old} »`,old)||'').trim();
   if(!nv||nv===old) return;
   const hit=items.filter(it=>String(it[mgF]||'').trim()===old);
   for(const it of hit){ it[mgF]=nv; await DB.put(it); }
+  if(mgF==='club'){ const o=LOGOS[lkey(old)]; if(o&&o.d&&!LOGOS[lkey(nv)]?.d){ const hd=await hdGet(lkey(old)); await setLogo(nv,{d:o.d,hd:hd||o.d}); } }
   items=await DB.all(); render(); renderManage();
   toast(`${hit.length} maillot${hit.length>1?'s':''} mis à jour`);
 };
