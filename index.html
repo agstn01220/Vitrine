@@ -489,7 +489,7 @@ const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const yearOf = s => { const m = String(s||'').match(/(18|19|20)\d\d/); return m ? +m[0] : null; };
 const eur = n => (n||0).toLocaleString('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0});
 const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-function url(it, side){ const b = it[side]; if(!b) return ''; const k = it.id+side; let u = urls.get(k); if(!u || u.b!==b){ if(u) URL.revokeObjectURL(u.u); u={b,u:URL.createObjectURL(b)}; urls.set(k,u);} return u.u; }
+function url(it, side){ const b = it[side]; if(!b) return ''; const k = it.id+side, sig=(it.updatedAt||0)+':'+b.size+':'+b.type; let u = urls.get(k); if(!u || (u.b!==b && u.sig!==sig)){ if(u) URL.revokeObjectURL(u.u); u={b,sig,u:URL.createObjectURL(b)}; urls.set(k,u);} return u.u; }
 let tt; function toast(m){ const t=$('#toast'); t.textContent=m; t.hidden=false; clearTimeout(tt); tt=setTimeout(()=>t.hidden=true,2600); }
 
 /* ---------- maillots d'exemple dessinés ---------- */
@@ -563,7 +563,7 @@ function render(){
   fillSelect($('#f-saison'),'Toutes saisons',items.map(i=>i.saison),F.saison);
   applyFilters();
   const g=$('#grid'), em=$('#empty');
-  g.innerHTML = view.map((it,i)=>cardHTML(it,i)).join('');
+  const gh = view.map((it,i)=>cardHTML(it,i)).join(''); if(g.__h!==gh){ g.innerHTML = gh; g.__h = gh; }
   em.hidden = view.length>0;
   em.innerHTML = items.length ? '<h2>Aucun résultat</h2><p>Aucun maillot ne correspond à ces filtres.</p>' : '<h2>Vitrine vide</h2><p>Ajoute ton premier maillot avec le bouton +.</p>';
   $('#ex-panel').hidden = !items.some(i=>i.example);
@@ -749,7 +749,7 @@ async function fetchLogos(){
   if(logoBusy) return; logoBusy=true; let got=false;
   const WEEK=7*864e5, clubs=[...new Set(items.map(i=>i.club).filter(Boolean))];
   for(const k in LOGOS){ const l=LOGOS[k]; if(l.d&&!l.m&&flagCode(l.club)){ LOGOS[k]={club:l.club,d:null,t:Date.now(),m:1}; hdPut(k,null); got=true; }
-    else if(l.d&&!l.m&&l.c!==2){ delete LOGOS[k]; hdPut(k,null); got=true; } }
+    else if(l.d&&!l.m&&l.c!==2&&navigator.onLine){ const r=await findLogo(l.club); if(r){ await hdPut(k,r.hd); LOGOS[k]={...l,d:r.d,c:2,h:1,t:Date.now()}; got=true; } else if(r===null){ LOGOS[k]={...l,c:2,t:Date.now()}; got=true; } } }
   if(got) saveLogos();
   for(const c of clubs){ const k=lkey(c), l=LOGOS[k]; if(flagCode(c)||(l&&(l.d||l.m||Date.now()-(l.miss||0)<WEEK))) continue;
     if(!navigator.onLine) break; const r=await findLogo(c); if(r){ await hdPut(k,r.hd); LOGOS[k]={club:c,d:r.d,t:Date.now(),c:2,h:1}; got=true; } else if(r===null) LOGOS[k]={club:c,miss:Date.now()}; saveLogos(); }
@@ -761,6 +761,7 @@ async function setLogo(c,r){ const k=lkey(c); await hdPut(k,r?r.hd:null); LOGOS[
 let CV={mode:'pays', club:null, country:null}; try{ CV.mode=LS.get('vx_cmode')||'pays'; }catch(e){}
 const clubPays=c=>{ const l=items.find(i=>i.club===c&&i.pays); return l?l.pays:''; };
 function seasonLabel(y, sample){ return /\d{4}\s*[-/]\s*\d{2}/.test(sample||'') ? `${y}-${String((y+1)%100).padStart(2,'0')}` : String(y); }
+const setHTML=(el,h)=>{ if(el.__h!==h){ el.innerHTML=h; el.__h=h; } };
 function renderClubs(){
   const el=$('#v-clubs'); if(!el) return;
   if(CV.club){
@@ -772,11 +773,11 @@ function renderClubs(){
       for(let y=mn;y<=mx;y++) tl+=`<span class="${have.has(y)?'have':''}">${seasonLabel(y,sample)}</span>`;
       const miss=mx-mn+1-have.size;
       tl=`<div class="timeline">${tl}</div><div class="legend"><span>${have.size} saison${have.size>1?'s':''} en vitrine</span>${mx>mn?`<span>${miss} manquante${miss>1?'s':''} entre ${mn} et ${mx}</span>`:''}</div>`; }
-    el.innerHTML=`<button class="back-link" id="cv-back">← ${CV.country?esc(CV.country):(CV.mode==='pays'?'Pays':'Clubs')}</button>
+    setHTML(el,`<button class="back-link" id="cv-back">← ${CV.country?esc(CV.country):(CV.mode==='pays'?'Pays':'Clubs')}</button>
       <div class="club-head">${pays?flagHTML(pays,1):''}${logoHTML(CV.club,'cl lg')}<h2>${esc(CV.club)}</h2></div>
       <p class="club-sub">${its.length} maillot${its.length>1?'s':''}${pays?' · '+esc(pays):''}</p>
       <div class="logo-act"><button type="button" id="lg-pick">${LOGOS[lkey(CV.club)]?.d?'Changer le logo':'Ajouter un logo'}</button>${LOGOS[lkey(CV.club)]?.d?'<button type="button" id="lg-del">Retirer</button>':''}<input type="file" id="lg-file" accept="image/*" hidden></div>${tl}
-      <div class="grid" id="cv-grid">${its.map((it,i)=>cardHTML(it,i)).join('')}</div>`;
+      <div class="grid" id="cv-grid">${its.map((it,i)=>cardHTML(it,i)).join('')}</div>`);
     $('#cv-back').onclick=()=>{ CV.club=null; renderClubs(); window.scrollTo(0,0); };
     $('#lg-pick').onclick=()=>$('#lg-file').click();
     $('#lg-file').onchange=async e=>{ const f=e.target.files[0]; if(!f) return; const u=URL.createObjectURL(f), d=await shrink(u,1); URL.revokeObjectURL(u); if(d){ await setLogo(CV.club,d); toast('Logo enregistré'); } else toast('Image illisible'); };
@@ -795,10 +796,10 @@ function renderClubs(){
     const cs=clubs.filter(c=>(clubPays(c)||'Pays non renseigné')===CV.country).sort(alpha);
     if(!cs.length){ CV.country=null; return renderClubs(); }
     const n=cs.reduce((s,c)=>s+cnt(c),0);
-    el.innerHTML=`<button class="back-link" id="cv-back">← Pays</button>
+    setHTML(el,`<button class="back-link" id="cv-back">← Pays</button>
       <div class="club-head">${flagHTML(CV.country,1)}<h2>${esc(CV.country)}</h2></div>
       <p class="club-sub">${cs.length} club${cs.length>1?'s':''} · ${n} maillot${n>1?'s':''}</p>
-      <div class="clist">${cs.map(clubRow).join('')}</div>`;
+      <div class="clist">${cs.map(clubRow).join('')}</div>`);
     $('#cv-back').onclick=()=>{ CV.country=null; renderClubs(); window.scrollTo(0,0); };
     el.querySelectorAll('[data-club]').forEach(b=>b.onclick=()=>{ CV.club=b.dataset.club; renderClubs(); window.scrollTo(0,0); });
     return;
@@ -813,7 +814,7 @@ function renderClubs(){
   } else {
     body=byPays().map(([p,cs])=>`<h3 class="csec">${flagHTML(p)}<span>${esc(p)}</span></h3><div class="clist">${cs.map(clubRow).join('')}</div>`).join('');
   }
-  el.innerHTML=`<div class="seg" role="group" aria-label="Affichage"><button data-m="pays" aria-pressed="${CV.mode==='pays'}">Par pays</button><button data-m="club" aria-pressed="${CV.mode==='club'}">Par club</button></div>${body}`;
+  setHTML(el,`<div class="seg" role="group" aria-label="Affichage"><button data-m="pays" aria-pressed="${CV.mode==='pays'}">Par pays</button><button data-m="club" aria-pressed="${CV.mode==='club'}">Par club</button></div>${body}`);
   el.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{ CV.mode=b.dataset.m; CV.country=null; LS.set('vx_cmode',CV.mode); renderClubs(); });
   el.querySelectorAll('[data-club]').forEach(b=>b.onclick=()=>{ CV.club=b.dataset.club; renderClubs(); window.scrollTo(0,0); });
   el.querySelectorAll('[data-country]').forEach(b=>b.onclick=()=>{ CV.country=b.dataset.country; renderClubs(); window.scrollTo(0,0); });
@@ -1148,8 +1149,8 @@ window.__sync = async function(){
     try{ const rl=new Map(); (await col('logos').get()).forEach(d=>rl.set(d.id,d.data())); let lc=false;
       for(const [k,r] of rl){ const l=LOGOS[k]; if(!l||!l.t||(r.t||0)>l.t){ LOGOS[k]={club:r.club,d:r.d||null,t:r.t,m:r.m,c:r.c,h:r.h}; hdPut(k,null); lc=true; } }
       for(const k in LOGOS){ const l=LOGOS[k], r=rl.get(k); if(l.t&&(!r||(r.t||0)<l.t)) await col('logos').doc(k).set({club:l.club,d:l.d||null,t:l.t,m:l.m||0,c:l.c||0,h:l.h||0}); if(l.h||!l.d) await hdUp(k); }
-      if(lc){ saveLogos(); changed=true; } }catch(e){ console.warn('logos',e); }
-    if(changed){ items=await DB.all(); render(); }
+      if(lc){ saveLogos(); window.__lc=1; } }catch(e){ console.warn('logos',e); }
+    if(changed){ items=await DB.all(); render(); } else if(window.__lc) render(); window.__lc=0;
     LS.set('vx_lastSync',Date.now()); sStat(`Connecté : ${fUser.email} · synchronisé à ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}`);
   }catch(e){ console.error(e); sStat('Synchro impossible pour l\'instant, nouvel essai automatique.'); setTimeout(()=>window.__sync(),30000); }
   syncing=false; if(again){ again=false; window.__sync(); }
