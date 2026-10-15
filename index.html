@@ -241,10 +241,12 @@ nav.tabs button[aria-selected="true"]::after{content:"";display:block;height:2px
 .flag{display:inline-block;width:24px;height:18px;vertical-align:middle;flex:0 0 auto;line-height:0}
 .flag img{display:block;width:100%;height:100%;object-fit:fill;outline:1px solid #111;outline-offset:-1px}
 .flag.lg{width:24px;height:18px}
-.logo{display:inline-block;width:1em;height:1em;object-fit:contain;vertical-align:-.12em;margin-right:.3em}
-.logo.md{width:28px;height:28px;margin:0;flex:0 0 auto}
-.logo.clogo{position:absolute;right:10px;bottom:7px;width:30px;height:30px;margin:0;pointer-events:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-.logo.lg{width:44px;height:44px;margin:0;flex:0 0 auto}
+.cl{display:inline-block;width:1em;height:1em;object-fit:contain;vertical-align:-.12em;margin-right:.3em}
+.cl.md{width:28px;height:28px;margin:0;flex:0 0 auto}
+.cl.clogo{position:absolute;right:10px;bottom:7px;width:30px;height:30px;margin:0;cursor:zoom-in;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.cl.lg{width:44px;height:44px;margin:0;flex:0 0 auto;cursor:zoom-in}
+.lview{position:fixed;inset:0;z-index:60;background:rgba(255,255,255,.97);display:grid;place-items:center;padding:24px;animation:fade .2s ease}
+.lview img{width:min(80vw,80vh,512px);height:auto;max-height:80vh;object-fit:contain}
 .logo-act{display:flex;gap:14px;margin:-6px 0 14px}
 .logo-act button{background:none;border:none;padding:0;color:var(--muted);font:600 13px var(--f-num);letter-spacing:.06em;text-transform:uppercase;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .kpi b.pv.pos{background:none;-webkit-text-fill-color:#4fbf8b;color:#4fbf8b;animation:none}
@@ -553,7 +555,7 @@ const cardHTML=(it,i)=>`<div class="card" role="button" tabindex="0" data-i="${i
       ${it.front?`<img src="${url(it,'front')}" alt="${esc(it.club)}" loading="lazy">`:'<span class="hint">Pas de photo</span>'}
 </div>
     <button class="fav${it.fav?' on':''}" data-fav="${esc(it.id)}" aria-label="Favori">★</button>
-    <div class="meta"><span class="club">${esc(it.club)}</span>${it.version?`<span class="sub">${esc(it.version)}</span>`:''}<span class="sub"><span>${esc(it.saison||'—')}</span>${it.joueur?`<span>· ${esc(it.joueur)}</span>`:''}</span>${it.serie?`<span class="serial">N° ${esc(it.serie)}</span>`:''}${logoHTML(it.club,'logo clogo')}</div></div>`;
+    <div class="meta"><span class="club">${esc(it.club)}</span>${it.version?`<span class="sub">${esc(it.version)}</span>`:''}<span class="sub"><span>${esc(it.saison||'—')}</span>${it.joueur?`<span>· ${esc(it.joueur)}</span>`:''}</span>${it.serie?`<span class="serial">N° ${esc(it.serie)}</span>`:''}${logoHTML(it.club,'cl clogo')}</div></div>`;
 function render(){
   $('#cnt').textContent=items.length;
   fillSelect($('#f-club'),'Tous clubs',items.map(i=>i.club),F.club);
@@ -611,7 +613,7 @@ function showCur(){
   $('#c-backface').innerHTML = `<div class="fiche"><span class="hint">${esc(it.saison||'')} · ${esc(it.type||'')}</span><b>${esc(it.numero||'—')}</b>${esc(it.joueur||'Sans flocage')}<br><span class="hint">${esc(it.club)}</span></div>`;
   $('#pos').textContent = `${cur+1} / ${view.length} · Touche la photo pour zoomer`;
   const facts=[['N° de série',it.serie],['Version',it.version],['Signé',it.signe?'Oui':''],['Patch',it.patch?'Oui':''],['Taille',it.taille],['État',it.etat],['Prix',it.prix?eur(+it.prix):''],['Provenance',it.provenance]].filter(f=>f[1]);
-  $('#c-details').innerHTML=`<div class="d-head">${it.pays?flagHTML(it.pays):''}${logoHTML(it.club,'logo lg')}<h2>${esc(it.club)}</h2></div>
+  $('#c-details').innerHTML=`<div class="d-head">${it.pays?flagHTML(it.pays):''}${logoHTML(it.club,'cl lg')}<h2>${esc(it.club)}</h2></div>
     <div class="sub">${[it.saison,it.type,it.marque,it.joueur&&(it.joueur+(it.numero?' #'+it.numero:''))].filter(Boolean).map(esc).join(' · ')}</div>
     <div class="facts">${facts.map(f=>`<span>${f[0]} <b>${esc(f[1])}</b></span>`).join('')}</div>
     ${it.more?.length?`<div class="thumbs">${[it.front,...it.more].map((b,i)=>`<button type="button" data-ph="${i}" aria-label="Photo ${i+1}"><img src="${URL.createObjectURL(b)}" alt=""></button>`).join('')}</div>`:''}
@@ -698,9 +700,23 @@ const flagHTML=(name,lg)=>{ const c=flagCode(name); return `<span class="flag${l
 let LOGOS={}; try{ LOGOS=JSON.parse(LS.get('vx_logos')||'{}'); }catch(e){}
 const lkey=c=>encodeURIComponent(String(c||'').trim().toLowerCase()).replace(/\./g,'%2E').slice(0,300);
 const saveLogos=()=>{ try{ localStorage.setItem('vx_logos',JSON.stringify(LOGOS)); }catch(e){} };
-const logoHTML=(c,cls='logo')=>{ const l=LOGOS[lkey(c)]; return l&&l.d?`<img class="${cls}" src="${l.d}" alt="">`:''; };
+const logoHTML=(c,cls='cl')=>{ const l=LOGOS[lkey(c)]; return l&&l.d?`<img class="${cls}" src="${l.d}" alt=""${/clogo|lg/.test(cls)?` data-logo="${esc(c)}"`:''}>`:''; };
+/* grand format (512 px) : base IndexedDB à part + Firestore logos_hd, chargé à la demande */
+let hdb=null; const hdOpen=()=>hdb||(hdb=new Promise(ok=>{ try{ const r=indexedDB.open('vitrine-logos',1); r.onupgradeneeded=()=>r.result.createObjectStore('hd'); r.onsuccess=()=>ok(r.result); r.onerror=()=>ok(null); }catch(e){ ok(null); } }));
+async function hdGet(k){ const db=await hdOpen(); if(!db) return null; try{ return await req(db.transaction('hd').objectStore('hd').get(k))||null; }catch(e){ return null; } }
+async function hdPut(k,v){ const db=await hdOpen(); if(!db) return; try{ const st=db.transaction('hd','readwrite').objectStore('hd'); await req(v?st.put(v,k):st.delete(k)); }catch(e){} }
+async function hdUp(k){ if(!fb||!fUser) return; const v=await hdGet(k); try{ if(v) await col('logos_hd').doc(k).set({d:v}); else await col('logos_hd').doc(k).delete(); }catch(e){} }
+async function showLogo(c){
+  const k=lkey(c), l=LOGOS[k]; if(!l||!l.d) return;
+  const v=document.createElement('div'); v.className='lview'; v.innerHTML=`<img src="${l.d}" alt="${esc(c)}">`; v.onclick=()=>v.remove(); document.body.appendChild(v);
+  let hd=await hdGet(k);
+  if(!hd&&l.h&&fb&&fUser){ try{ const d=await col('logos_hd').doc(k).get(); if(d.exists){ hd=d.data().d; await hdPut(k,hd); } }catch(e){} }
+  if(!hd&&!l.m&&navigator.onLine){ const r=await findLogo(c); if(r){ hd=r.hd; await hdPut(k,hd); LOGOS[k]={...l,h:1,t:Date.now()}; saveLogos(); setTimeout(()=>window.__sync&&window.__sync(),0); } }
+  if(hd&&v.isConnected) v.querySelector('img').src=hd;
+}
+document.addEventListener('click',e=>{ const g=e.target.closest('[data-logo]'); if(!g) return; e.stopPropagation(); e.preventDefault(); showLogo(g.dataset.logo); },true);
 function cleanBg(im){ // retire le fond uni (noir, blanc…) autour du logo puis recadre
-  const W=Math.min(400,im.naturalWidth), H=Math.round(im.naturalHeight*W/im.naturalWidth)||1, c=document.createElement('canvas'); c.width=W; c.height=H;
+  const W=Math.min(800,im.naturalWidth), H=Math.round(im.naturalHeight*W/im.naturalWidth)||1, c=document.createElement('canvas'); c.width=W; c.height=H;
   const x=c.getContext('2d'); x.drawImage(im,0,0,W,H); const D=x.getImageData(0,0,W,H), d=D.data;
   const cs=[0,W-1,(H-1)*W,H*W-1].map(i=>i*4);
   if(cs.some(i=>d[i+3]>200)){ const r=d[cs[0]],g=d[cs[0]+1],b=d[cs[0]+2], T=60, seen=new Uint8Array(W*H), st=[];
@@ -711,17 +727,18 @@ function cleanBg(im){ // retire le fond uni (noir, blanc…) autour du logo puis
   let x0=W,y0=H,x1=-1,y1=-1; for(let j=0;j<H;j++) for(let i=0;i<W;i++) if(d[(j*W+i)*4+3]>16){ if(i<x0)x0=i; if(i>x1)x1=i; if(j<y0)y0=j; if(j>y1)y1=j; }
   x.putImageData(D,0,0); if(x1<0) return c; const o=document.createElement('canvas'); o.width=x1-x0+1; o.height=y1-y0+1; o.getContext('2d').drawImage(c,x0,y0,o.width,o.height,0,0,o.width,o.height); return o; }
 function shrink(src){ return new Promise(ok=>{ const im=new Image(); im.crossOrigin='anonymous';
-  im.onload=()=>{ try{ const S=96, c=document.createElement('canvas'); c.width=c.height=S; const x=c.getContext('2d'), sv=cleanBg(im), k=Math.min(S/sv.width,S/sv.height)||1, w=sv.width*k, h=sv.height*k; x.drawImage(sv,(S-w)/2,(S-h)/2,w,h); ok(c.toDataURL('image/png')); }catch(e){ ok(null); } };
+  im.onload=()=>{ try{ const sv=cleanBg(im), out=S=>{ const c=document.createElement('canvas'); c.width=c.height=S; const x=c.getContext('2d'), k=Math.min(S/sv.width,S/sv.height)||1, w=sv.width*k, h=sv.height*k; x.imageSmoothingQuality='high'; x.drawImage(sv,(S-w)/2,(S-h)/2,w,h); return c.toDataURL('image/png'); };
+    ok({d:out(96), hd:out(Math.min(512,Math.max(sv.width,sv.height,96)))}); }catch(e){ ok(null); } };
   im.onerror=()=>ok(null); im.src=src; }); }
 const LOGO_RX=/logo|crest|badge|emblem|escudo|wappen|blason|stemma|ecusson|écusson|\.svg/i;
 async function findLogo(club){
   let err=false;
   for(const [w,q] of [['fr',club+' football'],['en',club+' football club'],['en',club+' national football team']]){
     try{
-      const r=await fetch(`https://${w}.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&generator=search&gsrlimit=3&gsrsearch=${encodeURIComponent(q)}&prop=pageimages&piprop=thumbnail|name&pithumbsize=192&pilicense=any`);
+      const r=await fetch(`https://${w}.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&generator=search&gsrlimit=3&gsrsearch=${encodeURIComponent(q)}&prop=pageimages&piprop=thumbnail|name&pithumbsize=512&pilicense=any`);
       const ps=Object.values((await r.json()).query?.pages||{}).sort((a,b)=>a.index-b.index);
       const p=ps.find(p=>p.thumbnail&&LOGO_RX.test(p.pageimage||'')&&!/flag|drapeau|kit_|map|carte/i.test(p.pageimage));
-      if(p){ const d=await shrink(p.thumbnail.source); if(d) return d; }
+      if(p){ const r=await shrink(p.thumbnail.source); if(r) return r; }
     }catch(e){ err=true; }
   }
   return err?undefined:null;
@@ -730,14 +747,14 @@ let logoBusy=false;
 async function fetchLogos(){
   if(logoBusy) return; logoBusy=true; let got=false;
   const WEEK=7*864e5, clubs=[...new Set(items.map(i=>i.club).filter(Boolean))];
-  for(const k in LOGOS){ const l=LOGOS[k]; if(l.d&&!l.m&&flagCode(l.club)){ LOGOS[k]={club:l.club,d:null,t:Date.now(),m:1}; got=true; }
-    else if(l.d&&!l.c){ const d=await shrink(l.d); LOGOS[k]={...l,d:d||l.d,c:1,t:Date.now()}; got=true; } }
+  for(const k in LOGOS){ const l=LOGOS[k]; if(l.d&&!l.m&&flagCode(l.club)){ LOGOS[k]={club:l.club,d:null,t:Date.now(),m:1}; hdPut(k,null); got=true; }
+    else if(l.d&&!l.c){ const r=await shrink(l.d); LOGOS[k]={...l,d:r?r.d:l.d,c:1,t:Date.now()}; got=true; } }
   if(got) saveLogos();
   for(const c of clubs){ const k=lkey(c), l=LOGOS[k]; if(flagCode(c)||(l&&(l.d||l.m||Date.now()-(l.miss||0)<WEEK))) continue;
-    if(!navigator.onLine) break; const d=await findLogo(c); if(d){ LOGOS[k]={club:c,d,t:Date.now(),c:1}; got=true; } else if(d===null) LOGOS[k]={club:c,miss:Date.now()}; saveLogos(); }
+    if(!navigator.onLine) break; const r=await findLogo(c); if(r){ await hdPut(k,r.hd); LOGOS[k]={club:c,d:r.d,t:Date.now(),c:1,h:1}; got=true; } else if(r===null) LOGOS[k]={club:c,miss:Date.now()}; saveLogos(); }
   logoBusy=false; if(got){ render(); setTimeout(()=>window.__sync&&window.__sync(),0); }
 }
-function setLogo(c,d){ LOGOS[lkey(c)]=d?{club:c,d,t:Date.now(),m:1,c:1}:{club:c,d:null,t:Date.now(),m:1}; saveLogos(); render(); setTimeout(()=>window.__sync&&window.__sync(),0); }
+async function setLogo(c,r){ const k=lkey(c); await hdPut(k,r?r.hd:null); LOGOS[k]=r?{club:c,d:r.d,t:Date.now(),m:1,c:1,h:1}:{club:c,d:null,t:Date.now(),m:1}; saveLogos(); render(); setTimeout(()=>window.__sync&&window.__sync(),0); }
 
 /* ---------- vue clubs / pays ---------- */
 let CV={mode:'pays', club:null, country:null}; try{ CV.mode=LS.get('vx_cmode')||'pays'; }catch(e){}
@@ -755,13 +772,13 @@ function renderClubs(){
       const miss=mx-mn+1-have.size;
       tl=`<div class="timeline">${tl}</div><div class="legend"><span>${have.size} saison${have.size>1?'s':''} en vitrine</span>${mx>mn?`<span>${miss} manquante${miss>1?'s':''} entre ${mn} et ${mx}</span>`:''}</div>`; }
     el.innerHTML=`<button class="back-link" id="cv-back">← ${CV.country?esc(CV.country):(CV.mode==='pays'?'Pays':'Clubs')}</button>
-      <div class="club-head">${pays?flagHTML(pays,1):''}${logoHTML(CV.club,'logo lg')}<h2>${esc(CV.club)}</h2></div>
+      <div class="club-head">${pays?flagHTML(pays,1):''}${logoHTML(CV.club,'cl lg')}<h2>${esc(CV.club)}</h2></div>
       <p class="club-sub">${its.length} maillot${its.length>1?'s':''}${pays?' · '+esc(pays):''}</p>
       <div class="logo-act"><button type="button" id="lg-pick">${LOGOS[lkey(CV.club)]?.d?'Changer le logo':'Ajouter un logo'}</button>${LOGOS[lkey(CV.club)]?.d?'<button type="button" id="lg-del">Retirer</button>':''}<input type="file" id="lg-file" accept="image/*" hidden></div>${tl}
       <div class="grid" id="cv-grid">${its.map((it,i)=>cardHTML(it,i)).join('')}</div>`;
     $('#cv-back').onclick=()=>{ CV.club=null; renderClubs(); window.scrollTo(0,0); };
     $('#lg-pick').onclick=()=>$('#lg-file').click();
-    $('#lg-file').onchange=async e=>{ const f=e.target.files[0]; if(!f) return; const u=URL.createObjectURL(f), d=await shrink(u); URL.revokeObjectURL(u); if(d){ setLogo(CV.club,d); toast('Logo enregistré'); } else toast('Image illisible'); };
+    $('#lg-file').onchange=async e=>{ const f=e.target.files[0]; if(!f) return; const u=URL.createObjectURL(f), d=await shrink(u); URL.revokeObjectURL(u); if(d){ await setLogo(CV.club,d); toast('Logo enregistré'); } else toast('Image illisible'); };
     if($('#lg-del')) $('#lg-del').onclick=()=>{ setLogo(CV.club,null); toast('Logo retiré'); };
     $('#cv-grid').onclick=async e=>{ const fb=e.target.closest('[data-fav]'); if(fb){ const it=items.find(i=>i.id===fb.dataset.fav); it.fav=!it.fav; await DB.put(it); render(); return; }
       const c=e.target.closest('.card'); if(c){ view=its; openCarousel(+c.dataset.i); } };
@@ -772,7 +789,7 @@ function renderClubs(){
   const byPays=()=>{ const by=new Map(); clubs.forEach(c=>{ const p=clubPays(c)||'Pays non renseigné'; if(!by.has(p)) by.set(p,[]); by.get(p).push(c); }); return [...by.entries()].sort((a,b)=>(a[0]==='Pays non renseigné')-(b[0]==='Pays non renseigné')||alpha(a[0],b[0])).map(([p,cs])=>[p,cs.sort(alpha)]); };
   const cnt=c=>items.filter(i=>i.club===c).length;
   const clubRow=c=>{ const ys=items.filter(i=>i.club===c).map(i=>yearOf(i.saison)).filter(Boolean), p=clubPays(c);
-    return `<button class="crow" data-club="${esc(c)}">${p?flagHTML(p):'<span class="flag"></span>'}${logoHTML(c,'logo md')}<span class="nm">${esc(c)}</span><span class="ct">${cnt(c)} maillot${cnt(c)>1?'s':''}${ys.length?' · '+Math.min(...ys)+(Math.max(...ys)>Math.min(...ys)?'–'+Math.max(...ys):''):''}</span><span class="chev">›</span></button>`; };
+    return `<button class="crow" data-club="${esc(c)}">${p?flagHTML(p):'<span class="flag"></span>'}${logoHTML(c,'cl md')}<span class="nm">${esc(c)}</span><span class="ct">${cnt(c)} maillot${cnt(c)>1?'s':''}${ys.length?' · '+Math.min(...ys)+(Math.max(...ys)>Math.min(...ys)?'–'+Math.max(...ys):''):''}</span><span class="chev">›</span></button>`; };
   if(CV.country){
     const cs=clubs.filter(c=>(clubPays(c)||'Pays non renseigné')===CV.country).sort(alpha);
     if(!cs.length){ CV.country=null; return renderClubs(); }
@@ -1128,8 +1145,8 @@ window.__sync = async function(){
     for(const id in tombs){ const r=remote.get(id); if(r&&(!r.deleted||r.updatedAt<tombs[id])) await col('maillots').doc(id).set({deleted:true,updatedAt:tombs[id]}); }
     try{ localStorage.setItem('vx_tombs','{}'); }catch(e){}
     try{ const rl=new Map(); (await col('logos').get()).forEach(d=>rl.set(d.id,d.data())); let lc=false;
-      for(const [k,r] of rl){ const l=LOGOS[k]; if(!l||!l.t||(r.t||0)>l.t){ LOGOS[k]={club:r.club,d:r.d||null,t:r.t,m:r.m,c:r.c}; lc=true; } }
-      for(const k in LOGOS){ const l=LOGOS[k], r=rl.get(k); if(l.t&&(!r||(r.t||0)<l.t)) await col('logos').doc(k).set({club:l.club,d:l.d||null,t:l.t,m:l.m||0,c:l.c||0}); }
+      for(const [k,r] of rl){ const l=LOGOS[k]; if(!l||!l.t||(r.t||0)>l.t){ LOGOS[k]={club:r.club,d:r.d||null,t:r.t,m:r.m,c:r.c,h:r.h}; hdPut(k,null); lc=true; } }
+      for(const k in LOGOS){ const l=LOGOS[k], r=rl.get(k); if(l.t&&(!r||(r.t||0)<l.t)) await col('logos').doc(k).set({club:l.club,d:l.d||null,t:l.t,m:l.m||0,c:l.c||0,h:l.h||0}); if(l.h||!l.d) await hdUp(k); }
       if(lc){ saveLogos(); changed=true; } }catch(e){ console.warn('logos',e); }
     if(changed){ items=await DB.all(); render(); }
     LS.set('vx_lastSync',Date.now()); sStat(`Connecté : ${fUser.email} · synchronisé à ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}`);
