@@ -709,7 +709,7 @@ const zUp=e=>{ if(!Z.pts.has(e.pointerId)) return; const wasPan=Z.g?.type===1; Z
 zEl.addEventListener('pointerup',zUp); zEl.addEventListener('pointercancel',zUp);
 window.addEventListener('resize',()=>{ if(!zEl.hidden) zFit(); });
 document.addEventListener('keydown',e=>{
-  const lv=document.querySelector('.lview'); if(lv){ if(e.key==='Escape') lv.remove(); return; }
+  const lv=document.querySelector('.lview'); if(lv){ if(e.key==='Escape'){ lv.remove(); document.activeElement?.blur?.(); } return; }
   if(!$('#zoom').hidden){ if(e.key==='Escape') $('#zoom').hidden=true; return; }
   if(!$('#carousel').hidden){ if(e.key==='Escape') closeCarousel(); if(e.key==='ArrowLeft') step(-1); if(e.key==='ArrowRight') step(1); }
   else if(!$('#editor').hidden && e.key==='Escape') closeEditor();
@@ -739,12 +739,13 @@ async function hdPut(k,v){ const db=await hdOpen(); if(!db) return; try{ const s
 async function hdUp(k){ if(!fb||!fUser) return; const v=await hdGet(k); try{ if(v) await col('logos_hd').doc(k).set({d:v}); else await col('logos_hd').doc(k).delete(); }catch(e){} }
 async function showLogo(c){
   const k=lkey(c), l=LOGOS[k]; if(!l||!l.d) return;
-  const v=document.createElement('div'); v.className='lview'; v.innerHTML=`<img src="${l.d}" alt="${esc(c)}">`; v.onclick=()=>v.remove(); document.body.appendChild(v);
+  const v=document.createElement('div'); v.className='lview'; v.innerHTML=`<img src="${l.d}" alt="${esc(c)}">`; v.onclick=()=>{ v.remove(); document.activeElement?.blur?.(); }; document.activeElement?.blur?.(); document.body.appendChild(v);
   let hd=await hdGet(k);
   if(!hd&&l.h&&fb&&fUser){ try{ const d=await col('logos_hd').doc(k).get(); if(d.exists){ hd=d.data().d; await hdPut(k,hd); } }catch(e){} }
   if(!hd&&!l.m&&navigator.onLine){ const r=await findLogo(c); if(r){ hd=r.hd; await hdPut(k,hd); LOGOS[k]={...l,d:r.d,c:2,h:1,t:Date.now()}; saveLogos(); setTimeout(()=>window.__sync&&window.__sync(),0); } }
   if(hd&&v.isConnected) v.querySelector('img').src=hd;
 }
+document.addEventListener('mousedown',e=>{ if(e.target.closest('[data-logo]')) e.preventDefault(); },true);
 document.addEventListener('click',e=>{ const g=e.target.closest('[data-logo]'); if(!g) return; e.stopPropagation(); e.preventDefault(); showLogo(g.dataset.logo); },true);
 function cleanBg(im){ // retire le fond uni (noir, blanc…) autour du logo puis recadre
   const W=Math.min(800,im.naturalWidth), H=Math.round(im.naturalHeight*W/im.naturalWidth)||1, c=document.createElement('canvas'); c.width=W; c.height=H;
