@@ -271,7 +271,7 @@ nav.tabs button[aria-selected="true"]::after{content:"";display:block;height:2px
 .club-head{display:flex;align-items:center;gap:12px;margin-bottom:6px}
 .club-head h2{margin:0;font:900 clamp(31px,8.4vw,46px)/1 var(--f-display);text-transform:uppercase;min-width:0}
 button.club-head{background:none;border:none;padding:0;width:100%;text-align:left;color:inherit;cursor:pointer}
-button.club-head .chev{color:var(--gold);font-size:34px;line-height:1;margin-left:4px}
+button.club-head .chev{display:block;flex:none;align-self:center;width:.42em;height:.7em;font-size:clamp(31px,8.4vw,46px);margin-left:6px;color:var(--gold)}
 button.club-head:hover h2{color:#e0483e}
 .club-sub{color:var(--muted);font:600 14px var(--f-num);letter-spacing:.06em;text-transform:uppercase;margin:0 0 14px}
 .timeline{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px}
@@ -843,7 +843,7 @@ function renderClubs(){
       return;
     }
     setHTML(el,`<button class="back-link" id="cv-back">← Pays</button>
-      <button type="button" class="club-head" id="cv-all" title="Voir tous les maillots">${flagHTML(CV.country,1)}<h2>${esc(CV.country)}</h2><span class="chev">›</span></button>
+      <button type="button" class="club-head" id="cv-all" title="Voir tous les maillots">${flagHTML(CV.country,1)}<h2>${esc(CV.country)}</h2><svg class="chev" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M2 2l8 8-8 8"/></svg></button>
       <p class="club-sub">${cs.length} club${cs.length>1?'s':''} · ${n} maillot${n>1?'s':''}</p>
       <div class="clist">${cs.map(clubRow).join('')}</div>`);
     $('#cv-back').onclick=()=>{ CV.country=null; renderClubs(); window.scrollTo(0,0); };
