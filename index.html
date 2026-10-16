@@ -740,12 +740,12 @@ const logoHTML=(c,cls='cl')=>{ const l=LOGOS[lkey(c)]; return l&&l.d?`<img class
 let hdb=null; const hdOpen=()=>hdb||(hdb=new Promise(ok=>{ try{ const r=indexedDB.open('vitrine-logos',1); r.onupgradeneeded=()=>r.result.createObjectStore('hd'); r.onsuccess=()=>ok(r.result); r.onerror=()=>ok(null); }catch(e){ ok(null); } }));
 async function hdGet(k){ const db=await hdOpen(); if(!db) return null; try{ return await req(db.transaction('hd').objectStore('hd').get(k))||null; }catch(e){ return null; } }
 async function hdPut(k,v){ const db=await hdOpen(); if(!db) return; try{ const st=db.transaction('hd','readwrite').objectStore('hd'); await req(v?st.put(v,k):st.delete(k)); }catch(e){} }
-async function hdUp(k){ if(!fb||!fUser) return; const v=await hdGet(k); try{ if(v) await col('logos_hd').doc(k).set({d:v}); else await col('logos_hd').doc(k).delete(); }catch(e){} }
+async function hdUp(k){ if(!fb||!fUser) return; const v=await hdGet(k); try{ if(v) await col('photos').doc('lghd_'+k).set({d:v}); else await col('photos').doc('lghd_'+k).delete(); }catch(e){} }
 async function showLogo(c){
   const k=lkey(c), l=LOGOS[k]; if(!l||!l.d) return;
   const v=document.createElement('div'); v.className='lview'; v.innerHTML=`<img src="${l.d}" alt="${esc(c)}">`; v.onclick=()=>{ v.remove(); document.activeElement?.blur?.(); }; document.activeElement?.blur?.(); document.body.appendChild(v);
   let hd=await hdGet(k);
-  if(!hd&&l.h&&fb&&fUser){ try{ const d=await col('logos_hd').doc(k).get(); if(d.exists){ hd=d.data().d; await hdPut(k,hd); } }catch(e){} }
+  if(!hd&&l.h&&fb&&fUser){ for(const ref of [col('photos').doc('lghd_'+k),col('logos_hd').doc(k)]){ try{ const d=await ref.get(); if(d.exists){ hd=d.data().d; await hdPut(k,hd); break; } }catch(e){} } }
   if(!hd&&!l.m&&navigator.onLine){ const r=await findLogo(c); if(r){ hd=r.hd; await hdPut(k,hd); LOGOS[k]={...l,d:r.d,c:2,h:1,t:Date.now()}; saveLogos(); setTimeout(()=>window.__sync&&window.__sync(),0); } }
   if(hd&&v.isConnected) v.querySelector('img').src=hd;
 }
@@ -1202,9 +1202,10 @@ window.__sync = async function(){
     }
     for(const id in tombs){ const r=remote.get(id); if(r&&(!r.deleted||r.updatedAt<tombs[id])) await col('maillots').doc(id).set({deleted:true,updatedAt:tombs[id]}); }
     try{ localStorage.setItem('vx_tombs','{}'); }catch(e){}
-    try{ const rl=new Map(); (await col('logos').get()).forEach(d=>rl.set(d.id,d.data())); let lc=false;
+    try{ const rl=new Map(); try{ (await col('logos').get()).forEach(d=>rl.set(d.id,d.data())); }catch(e){}
+      (await col('photos').where('kind','==','logo').get()).forEach(d=>{ const r=d.data(), k=d.id.slice(5); if(!rl.has(k)||(rl.get(k).t||0)<(r.t||0)) rl.set(k,r); }); let lc=false;
       for(const [k,r] of rl){ const l=LOGOS[k]; if(!l||!l.t||(r.t||0)>l.t){ LOGOS[k]={club:r.club,d:r.d||null,t:r.t,m:r.m,c:r.c,h:r.h}; hdPut(k,null); lc=true; } }
-      for(const k in LOGOS){ const l=LOGOS[k], r=rl.get(k); if(l.t&&(!r||(r.t||0)<l.t)) await col('logos').doc(k).set({club:l.club,d:l.d||null,t:l.t,m:l.m||0,c:l.c||0,h:l.h||0}); if(l.h||!l.d) await hdUp(k); }
+      for(const k in LOGOS){ const l=LOGOS[k], r=rl.get(k); if(l.t&&(!r||(r.t||0)<l.t)){ await col('photos').doc('logo_'+k).set({kind:'logo',club:l.club,d:l.d||null,t:l.t,m:l.m||0,c:l.c||0,h:l.h||0}); if(l.h||!l.d) await hdUp(k); } }
       if(lc){ saveLogos(); window.__lc=1; } }catch(e){ console.warn('logos',e); }
     if(changed){ items=await DB.all(); render(); } else if(window.__lc) render(); window.__lc=0;
     LS.set('vx_lastSync',Date.now()); sStat(`Connecté : ${fUser.email} · synchronisé à ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}`);
