@@ -1206,9 +1206,9 @@ window.__sync = async function(){
       (await col('photos').where('kind','==','logo').get()).forEach(d=>{ const r=d.data(), k=d.id.slice(5); if(!rl.has(k)||(rl.get(k).t||0)<(r.t||0)) rl.set(k,r); }); let lc=false;
       for(const [k,r] of rl){ const l=LOGOS[k]; if(!l||!l.t||(r.t||0)>l.t){ LOGOS[k]={club:r.club,d:r.d||null,t:r.t,m:r.m,c:r.c,h:r.h}; hdPut(k,null); lc=true; } }
       for(const k in LOGOS){ const l=LOGOS[k], r=rl.get(k); if(l.t&&(!r||(r.t||0)<l.t)){ await col('photos').doc('logo_'+k).set({kind:'logo',club:l.club,d:l.d||null,t:l.t,m:l.m||0,c:l.c||0,h:l.h||0}); if(l.h||!l.d) await hdUp(k); } }
-      if(lc){ saveLogos(); window.__lc=1; } }catch(e){ console.warn('logos',e); }
+      if(lc){ saveLogos(); window.__lc=1; } window.__lgErr=''; }catch(e){ console.warn('logos',e); window.__lgErr=(e&&(e.code||e.message))||'erreur'; }
     if(changed){ items=await DB.all(); render(); } else if(window.__lc) render(); window.__lc=0;
-    LS.set('vx_lastSync',Date.now()); sStat(`Connecté : ${fUser.email} · synchronisé à ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}`);
+    LS.set('vx_lastSync',Date.now()); sStat(`Connecté : ${fUser.email} · synchronisé à ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}`+(window.__lgErr?` · logos non synchronisés (${window.__lgErr})`:` · ${Object.values(LOGOS).filter(l=>l.d).length} logos`));
   }catch(e){ console.error(e); sStat('Synchro impossible pour l\'instant, nouvel essai automatique.'); setTimeout(()=>window.__sync(),30000); }
   syncing=false; if(again){ again=false; window.__sync(); }
 };
