@@ -682,9 +682,11 @@ const zUp=e=>{ if(!Z.pts.has(e.pointerId)) return; const wasPan=Z.g?.type===1; Z
 zEl.addEventListener('pointerup',zUp); zEl.addEventListener('pointercancel',zUp);
 window.addEventListener('resize',()=>{ if(!zEl.hidden) zFit(); });
 document.addEventListener('keydown',e=>{
+  const lv=document.querySelector('.lview'); if(lv){ if(e.key==='Escape') lv.remove(); return; }
   if(!$('#zoom').hidden){ if(e.key==='Escape') $('#zoom').hidden=true; return; }
   if(!$('#carousel').hidden){ if(e.key==='Escape') closeCarousel(); if(e.key==='ArrowLeft') step(-1); if(e.key==='ArrowRight') step(1); }
   else if(!$('#editor').hidden && e.key==='Escape') closeEditor();
+  else if(e.key==='Escape' && !$('#v-clubs').hidden && $('#cv-back') && $('#editor').hidden && $('#manage').hidden) $('#cv-back').click();
 });
 
 /* ---------- drapeaux ---------- */
